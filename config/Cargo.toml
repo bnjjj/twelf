@@ -12,3 +12,4 @@ serde = { version = "1.0.117", features = ["derive"] }
 config-derive = { path = "../config-derive" }
 serde_json = { version = "1.0.59", features = ["raw_value"] }
 toml = "0.5.7"
+serde-value = "0.7.0"
