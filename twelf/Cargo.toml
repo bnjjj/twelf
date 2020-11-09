@@ -1,5 +1,5 @@
 [package]
-name = "config"
+name = "twelf"
 version = "0.1.0"
 authors = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
 edition = "2018"
@@ -7,9 +7,14 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-envy = { path = "../../envy" }
+envy = { git = "https://github.com/bnjjj/envy", branch = "master" }
 serde = { version = "1.0.117", features = ["derive"] }
 config-derive = { path = "../config-derive" }
 serde_json = { version = "1.0.59", features = ["raw_value"] }
 toml = "0.5.7"
 serde-value = "0.7.0"
+serde_yaml = "0.8.14"
+serde_ini = "0.2.0"
+thiserror = "1.0.22"
+clap = "2.33.3"
+structopt = "0.3.20"

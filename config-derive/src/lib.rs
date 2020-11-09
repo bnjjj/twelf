@@ -1,13 +1,11 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use quote::quote;
+use quote::{quote, ToTokens};
 use syn::{parse::Parse, punctuated::Punctuated, DeriveInput, Error, Expr, Ident, Lit, Token};
 #[derive(Default, Debug)]
-struct ConfigAttrs {
-    prefix: Option<String>,
-}
+struct AssignAttrs;
 
-impl Parse for ConfigAttrs {
+impl Parse for AssignAttrs {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         let attrs = Punctuated::<Expr, Token![,]>::parse_terminated(input)?;
 
@@ -21,7 +19,7 @@ impl Parse for ConfigAttrs {
             None
         });
 
-        let mut config_attrs = ConfigAttrs::default();
+        let mut config_attrs = AssignAttrs::default();
         for (assign_expr, right_expr) in assign_exprs {
             let name = assign_expr
                 .path
@@ -31,43 +29,55 @@ impl Parse for ConfigAttrs {
                 })?
                 .to_string();
 
-            if name == "prefix" {
-                if let Expr::Lit(lit_expr) = *right_expr {
-                    if let Lit::Str(lit_expr) = &lit_expr.lit {
-                        config_attrs.prefix = Some(lit_expr.value());
-                        break;
-                    } else {
-                        return Err(Error::new_spanned(
-                            lit_expr,
-                            "prefix value must be str literal",
-                        ));
-                    }
-                } else {
-                    return Err(Error::new_spanned(
-                        right_expr,
-                        "prefix value must be literal",
-                    ));
-                }
+            if name == "default"
+                || name == "serialize_with"
+                || name == "deserialize_with"
+                || name == "with"
+            {
+                return Ok(Self {});
             }
         }
 
-        Ok(config_attrs)
+        Err(Error::new(Span::call_site(), "not found"))
     }
 }
 
 #[proc_macro_attribute]
-pub fn config(attrs: TokenStream, item: TokenStream) -> TokenStream {
+pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let strukt = syn::parse_macro_input!(item as DeriveInput);
     let struct_name = strukt.ident.clone();
-    let attrs = syn::parse_macro_input!(attrs as ConfigAttrs);
-
+    // let attrs = syn::parse_macro_input!(attrs as ConfigAttrs);
+    let mut fields_name = vec![];
+    let mut fields_ident = vec![];
     let fields = if let syn::Data::Struct(fields) = &strukt.data {
         fields.fields.iter().map(|field| {
             let ty = field.ty.clone();
             let ident = field.ident.clone();
             let vis = field.vis.clone();
             let colon = field.colon_token;
-            quote!(#vis #ident #colon Option<#ty>,)
+
+            if let Some(ident) = &ident {
+                fields_ident.push(ident.clone());
+                fields_name.push(ident.to_string());
+            }
+
+            let attrs =
+                field
+                    .attrs
+                    .clone()
+                    .into_iter()
+                    .filter(|attr| match attr.path.get_ident() {
+                        Some(attr_ident) if attr_ident == "serde" => {
+                            attr.parse_args::<AssignAttrs>().is_err()
+                        }
+                        _ => true,
+                    });
+            let res = quote! {
+                #(#attrs)*
+                #vis #ident #colon Option<#ty>,
+            };
+
+            res
         })
     } else {
         return TokenStream::from(
@@ -76,6 +86,7 @@ pub fn config(attrs: TokenStream, item: TokenStream) -> TokenStream {
     };
     let struct_vis = strukt.vis.clone();
     let struct_gen = strukt.generics.clone();
+    let struct_where = strukt.generics.where_clause.clone();
     let struct_attrs = strukt.attrs.clone();
     let opt_struct_name = Ident::new(
         format!("Opt{}", struct_name.to_string()).as_str(),
@@ -84,72 +95,84 @@ pub fn config(attrs: TokenStream, item: TokenStream) -> TokenStream {
 
     let opt_struct = quote! {
         #(#struct_attrs)*
-        #struct_vis struct #opt_struct_name #struct_gen {
+        #struct_vis struct #opt_struct_name #struct_gen #struct_where {
             #(#fields)*
         }
     };
 
-    // strukt.data
-    let body = match attrs.prefix {
-        Some(prefix) => {
-            quote!(config::reexports::envy::prefixed(#prefix).from_env::<#struct_name>())
-        }
-        None => quote!(config::reexports::envy::from_env::<#struct_name>()),
-    };
+    // let clap_arm = fields_name.into_iter().map(|field_name| {
+
+    // });
+
+    println!("opt struct : {:?}", opt_struct.to_string());
+
     let code = quote! {
-        #[derive(config::reexports::serde::Deserialize)]
+        #[derive(::twelf::reexports::serde::Deserialize)]
         #strukt
 
-        impl #struct_name {
-            pub fn new() -> config::reexports::envy::Result<Self> {
-                #body
-            }
-
-            pub fn with_priorities(priorities: &[config::Priority]) -> Result<Self, config::Error> {
+        impl #struct_gen #struct_name #struct_gen #struct_where {
+            pub fn with_layers(layers: &[::twelf::Layer]) -> Result<Self, ::twelf::Error> {
                 use std::iter::FromIterator;
-                let mut res: std::collections::HashMap<String, config::reexports::serde_json::Value> = std::collections::HashMap::new();
-                for prio in priorities {
-                    let extension = Self::parse(prio)?;
-                    // println!("extension --- {:?}", extension);
+                let mut res: std::collections::HashMap<String, ::twelf::reexports::serde_json::Value> = std::collections::HashMap::new();
+                for layer in layers {
+                    let extension = Self::parse(layer)?;
                     res.extend(
                         extension
                             .as_object()
-                            .ok_or_else(|| config::Error::InvalidFormat)?
+                            .ok_or_else(|| ::twelf::Error::InvalidFormat)?
                             .to_owned()
                             .into_iter().filter(|(_k, v)| !v.is_null()),
                     );
                 }
+                println!("res --- {:?}", res);
 
-                config::reexports::serde_json::from_value(config::reexports::serde_json::Value::Object(config::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(config::Error::from)
+                ::twelf::reexports::serde_json::from_value(::twelf::reexports::serde_json::Value::Object(::twelf::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(|e| ::twelf::Error::Deserialize(e.to_string()))
             }
 
-            // TODO: use this for parsing in the builder loop priorities, maybe use a trait ? or add with priorities to loop over here. maybe it's better
-            fn parse(priority: &config::Priority) -> Result<config::reexports::serde_json::Value, config::Error>
+            fn parse(priority: &::twelf::Layer) -> Result<::twelf::reexports::serde_json::Value, ::twelf::Error>
             {
-                 #[derive(config::reexports::serde::Deserialize, config::reexports::serde::Serialize)]
+                 #[derive(::twelf::reexports::serde::Deserialize, ::twelf::reexports::serde::Serialize)]
                 #opt_struct
 
                 let res = match priority {
-                    config::Priority::Env(prefix) => match prefix {
+                    ::twelf::Layer::Env(prefix) => match prefix {
                         Some(prefix) => {
-                            let tmp_cfg: #opt_struct_name = config::reexports::envy::prefixed(prefix).from_env()?;
-                            serde_json::to_value(tmp_cfg)
-
+                            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
+                            ::twelf::reexports::serde_json::to_value(tmp_cfg)
                         },
                         None => {
-                            let tmp_cfg: #opt_struct_name = config::reexports::envy::from_env()?;
-                            serde_json::to_value(tmp_cfg)
+                            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
+                            ::twelf::reexports::serde_json::to_value(tmp_cfg)
                         },
                     }?,
-                    config::Priority::Json(filepath) => config::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?,
-                    config::Priority::Toml(filepath) => config::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
-                    config::Priority::Yaml(_) => todo!(),
+                    ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?,
+                    ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
+                    ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
+                    ::twelf::Layer::Yaml(filepath) => ::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?,
+                    ::twelf::Layer::Ini(filepath) => {
+                       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
+                       ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+                    },
+                    ::twelf::Layer::Clap(matches) => {
+                        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+
+                        #(
+                            if let Some(vmatch) = matches.value_of(#fields_name) {
+                                map.insert(String::from(#fields_name), vmatch.to_string());
+                            }
+                        )*
+
+                        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
+                        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+                    },
                 };
 
                 Ok(res)
             }
         }
     };
+
+    println!("code --- {:?}", code.to_string());
 
     TokenStream::from(code)
 }
