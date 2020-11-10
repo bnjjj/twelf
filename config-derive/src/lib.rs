@@ -153,7 +153,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
 
             pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static, 'static>> {
                 vec![#(
-                   ::twelf::reexports::clap::Arg::with_name(#fields_name).long(#field_names_clap).help(#docs).takes_value(true)
+                   ::twelf::reexports::clap::Arg::with_name(#fields_name).long(#field_names_clap).help(#docs).takes_value(true).global(true)
                 ),*]
             }
 
