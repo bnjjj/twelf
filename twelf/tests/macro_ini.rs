@@ -34,6 +34,7 @@ fn ini_simple_with_prefix() {
     #[config]
     #[derive(Debug)]
     struct Conf {
+        /// Coucou
         elements_def: HashMap<String, String>,
         #[serde(default = "default_array")]
         array_def: Vec<String>,

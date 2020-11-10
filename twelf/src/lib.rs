@@ -3,13 +3,12 @@ mod error;
 use std::path::PathBuf;
 
 pub mod reexports {
-    pub use clap::ArgMatches;
+    pub use clap;
     pub use envy;
     pub use serde;
     pub use serde_ini;
     pub use serde_json;
     pub use serde_yaml;
-    pub use structopt;
     pub use toml;
 }
 
