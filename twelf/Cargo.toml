@@ -24,7 +24,7 @@ clap = ["clap_rs"]
 
 [dependencies]
 envy = { git = "https://github.com/bnjjj/envy", branch = "master" }
-config-derive = { path = "../config-derive" }
+config-derive = { path = "../config-derive", version = "0.1" }
 serde_json = { version = "1.0.59" }
 thiserror = "1.0.22"
 log = "0.4.11"

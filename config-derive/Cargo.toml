@@ -3,6 +3,14 @@ name = "config-derive"
 version = "0.1.0"
 authors = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
 edition = "2018"
+license = "MIT"
+keywords = ["config", "configuration", "env", "environment", "settings"]
+categories = ["config"]
+readme = "README.md"
+homepage = "https://github.com/bnjjj/twelf"
+repository = "https://github.com/bnjjj/twelf"
+description = "Proc macro used by Twelf crate"
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
