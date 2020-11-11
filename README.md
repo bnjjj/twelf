@@ -1,6 +1,6 @@
 # Twelf
 
-Twelf is a configuration solution for Rust including 12-Factor support. It is designed with `Layer`s in order to configure different source and formats to build your configuration. The main goal is to be very simple using the proc macro `twelf::config`. For now it supports : 
+Twelf is a configuration solution for Rust including 12-Factor support. It is designed with `Layer`s in order to configure different sources and formats to build your configuration. The main goal is to be very simple using the proc macro `twelf::config`. For now it supports : 
 
 + Default settings (inside your codebase with `#[serde(default = ...)]` coming from [serde](https://serde.rs))
 + Reading from `TOML`, `YAML`, `JSON`, `DHALL`, `INI` files
