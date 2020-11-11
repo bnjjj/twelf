@@ -1,12 +1,12 @@
 [package]
 name = "twelf"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
 edition = "2018"
 license = "MIT"
 keywords = ["config", "configuration", "env", "environment", "settings"]
 categories = ["config"]
-readme = "README.md"
+readme = "../README.md"
 homepage = "https://github.com/bnjjj/twelf"
 repository = "https://github.com/bnjjj/twelf"
 description = "Twelf is a configuration solution for Rust including 12-Factor support. It is designed with layers in order to configure different sources and formats to build your configuration. The main goal is to be very simple using a proc macro."
