@@ -24,14 +24,15 @@ clap = ["clap_rs"]
 
 [dependencies]
 envy = { git = "https://github.com/bnjjj/envy", branch = "master" }
-serde = { version = "1.0.117", features = ["derive"] }
 config-derive = { path = "../config-derive" }
-serde_json = { version = "1.0.59", features = ["raw_value"] }
-toml_rs = { version =  "0.5.7", package = "toml" }
-serde-value = "0.7.0"
-serde_yaml = "0.8.14"
-serde_ini = "0.2.0"
+serde_json = { version = "1.0.59" }
 thiserror = "1.0.22"
-clap_rs = { version = "2.33.3", package = "clap" }
 log = "0.4.11"
-serde_dhall = "0.8.0"
+serde = { version = "1.0.117", features = ["derive"] }
+
+# Features
+serde_ini = { version = "0.2.0", optional = true }
+serde_yaml = { version = "0.8.14", optional = true }
+serde_dhall = { version = "0.8.0", optional = true }
+toml_rs = { version =  "0.5.7", package = "toml", optional = true }
+clap_rs = { version = "2.33.3", package = "clap", optional = true }

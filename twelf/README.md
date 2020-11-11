@@ -55,7 +55,7 @@ let config = TestCfg::with_layers(&[
 
 
 # TODO:
-+ Add feature flags for layers
++ Add tests for feature flags (ex: cargo test --no-default-features --features dhall --test dhall)
 + Write an example with env + files
 + Write an example with default + env
 + Write an example with clap

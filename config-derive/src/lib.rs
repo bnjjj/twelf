@@ -156,6 +156,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                 ::twelf::reexports::serde_json::from_value(::twelf::reexports::serde_json::Value::Object(::twelf::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(|e| ::twelf::Error::Deserialize(e.to_string()))
             }
 
+            #[cfg(feature = "clap")]
             pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static, 'static>> {
                 vec![#(
                    ::twelf::reexports::clap::Arg::with_name(#fields_name).long(#field_names_clap).help(#docs).takes_value(true).global(true)
@@ -178,15 +179,20 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                             ::twelf::reexports::serde_json::to_value(tmp_cfg)
                         },
                     }?,
+                    #[cfg(feature = "json")]
                     ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?,
+                    #[cfg(feature = "toml")]
                     ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
-                    ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
+                    #[cfg(feature = "yaml")]
                     ::twelf::Layer::Yaml(filepath) => ::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?,
+                    #[cfg(feature = "dhall")]
                     ::twelf::Layer::Dhall(filepath) => ::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?,
+                    #[cfg(feature = "ini")]
                     ::twelf::Layer::Ini(filepath) => {
                        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
                        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
                     },
+                    #[cfg(feature = "clap")]
                     ::twelf::Layer::Clap(matches) => {
                         let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
