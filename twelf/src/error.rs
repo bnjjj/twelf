@@ -9,11 +9,13 @@ pub enum Error {
     #[error("json serde error")]
     Json(#[from] serde_json::Error),
     #[error("toml serde error")]
-    Toml(#[from] toml::de::Error),
+    Toml(#[from] toml_rs::de::Error),
     #[error("yaml serde error")]
     Yaml(#[from] serde_yaml::Error),
     #[error("ini serde error")]
     Ini(#[from] serde_ini::de::Error),
+    #[error("dhall serde error")]
+    Dhall(#[from] serde_dhall::Error),
     #[error("invalid format")]
     InvalidFormat,
     #[error("deserialize error: {0}")]

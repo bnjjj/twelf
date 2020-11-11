@@ -148,6 +148,11 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                     );
                 }
 
+                ::twelf::reexports::log::debug!(target: "twelf", "configuration:");
+                for (key, val) in &res {
+                    ::twelf::reexports::log::debug!(target: "twelf", "{}={}", key, val);
+                }
+
                 ::twelf::reexports::serde_json::from_value(::twelf::reexports::serde_json::Value::Object(::twelf::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(|e| ::twelf::Error::Deserialize(e.to_string()))
             }
 
@@ -177,6 +182,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                     ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
                     ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
                     ::twelf::Layer::Yaml(filepath) => ::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?,
+                    ::twelf::Layer::Dhall(filepath) => ::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?,
                     ::twelf::Layer::Ini(filepath) => {
                        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
                        ::twelf::reexports::serde_json::to_value(tmp_cfg)?

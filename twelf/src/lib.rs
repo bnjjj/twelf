@@ -3,13 +3,15 @@ mod error;
 use std::path::PathBuf;
 
 pub mod reexports {
-    pub use clap;
+    pub use clap_rs as clap;
     pub use envy;
+    pub use log;
     pub use serde;
+    pub use serde_dhall;
     pub use serde_ini;
     pub use serde_json;
     pub use serde_yaml;
-    pub use toml;
+    pub use toml_rs as toml;
 }
 
 pub use config_derive::config;
@@ -22,5 +24,6 @@ pub enum Layer<'a> {
     Yaml(PathBuf),
     Toml(PathBuf),
     Ini(PathBuf),
-    Clap(clap::ArgMatches<'a>),
+    Dhall(PathBuf),
+    Clap(clap_rs::ArgMatches<'a>),
 }

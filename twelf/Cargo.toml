@@ -3,7 +3,23 @@ name = "twelf"
 version = "0.1.0"
 authors = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
 edition = "2018"
+license = "MIT"
+keywords = ["config", "configuration", "env", "environment", "settings"]
+categories = ["config"]
+readme = "README.md"
+homepage = "https://github.com/bnjjj/twelf"
+repository = "https://github.com/bnjjj/twelf"
+description = "Twelf is a configuration solution for Rust including 12-Factor support. It is designed with layers in order to configure different sources and formats to build your configuration. The main goal is to be very simple using a proc macro."
 
+
+[features]
+default = ["json", "ini", "yaml", "clap", "toml", "dhall"]
+ini = []
+json = []
+yaml = []
+toml = []
+dhall = []
+clap = []
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
@@ -11,9 +27,11 @@ envy = { git = "https://github.com/bnjjj/envy", branch = "master" }
 serde = { version = "1.0.117", features = ["derive"] }
 config-derive = { path = "../config-derive" }
 serde_json = { version = "1.0.59", features = ["raw_value"] }
-toml = "0.5.7"
+toml_rs = { version =  "0.5.7", package = "toml" }
 serde-value = "0.7.0"
 serde_yaml = "0.8.14"
 serde_ini = "0.2.0"
 thiserror = "1.0.22"
-clap = "2.33.3"
+clap_rs = { version = "2.33.3", package = "clap" }
+log = "0.4.11"
+serde_dhall = "0.8.0"
