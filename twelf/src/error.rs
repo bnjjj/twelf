@@ -1,5 +1,6 @@
 use thiserror::Error as ErrorTrait;
 
+/// Error generated when instantiate configuration
 #[derive(Debug, ErrorTrait)]
 pub enum Error {
     #[error("io error")]

@@ -1,6 +1,12 @@
 # Twelf
+![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)
+![Rust](https://github.com/bnjjj/twelf/workflows/Rust/badge.svg)
+[![Version](https://img.shields.io/crates/v/twelf.svg)](https://crates.io/crates/twelf)
+[![Docs.rs](https://docs.rs/twelf/badge.svg)](https://docs.rs/twelf)
 
-Twelf is a configuration solution for Rust including 12-Factor support. It is designed with `Layer`s in order to configure different sources and formats to build your configuration. The main goal is to be very simple using the proc macro `twelf::config`. For now it supports : 
+> Twelf is a configuration solution for Rust including 12-Factor support. It is designed with `Layer`s in order to configure different sources and formats to build your configuration. The main goal is to be very simple using the proc macro `twelf::config`.
+
+For now it supports : 
 
 + Default settings (inside your codebase with `#[serde(default = ...)]` coming from [serde](https://serde.rs))
 + Reading from `TOML`, `YAML`, `JSON`, `DHALL`, `INI` files
@@ -13,28 +19,28 @@ Twelf is a configuration solution for Rust including 12-Factor support. It is de
 ## Simple with JSON and environment variables
 
 ```rust
-use twelf::config;
+use twelf::{config, Layer};
 
 #[config]
-struct TestCfg {
+struct Conf {
     test: String,
     another: usize,
 }
 
 // Init configuration with layers, each layers override only existing fields
-let config = TestCfg::with_layers(&[
+let config = Conf::with_layers(&[
     Layer::Json("conf.json".into()),
-    Layer::Env(Some("PREFIX_"))
+    Layer::Env(Some("PREFIX_".to_string()))
 ]).unwrap();
 ```
 
 ## Example with clap support
 
 ```rust
-use twelf::config;
+use twelf::{config, Layer};
 
 #[config]
-struct TestCfg {
+struct Conf {
     /// Here is an example of documentation which is displayed in clap
     test: String,
     another: usize,
@@ -44,9 +50,9 @@ struct TestCfg {
 let app = clap::App::new("test").args(&Conf::clap_args());
 
 // Init configuration with layers, each layers override only existing fields
-let config = TestCfg::with_layers(&[
+let config = Conf::with_layers(&[
     Layer::Json("conf.json".into()),
-    Layer::Env(Some("PREFIX_")),
+    Layer::Env(Some("PREFIX_".to_string())),
     Layer::Clap(app.get_matches().clone())
 ]).unwrap();
 
@@ -62,13 +68,11 @@ If you don't want to include useless crates if you just use 2 of all available l
 twelf = { version = "0.1", default-features = false, features = ["yaml"] }
 ```
 
+Check [here](./twelf/examples) for more examples.
+
 # TODO:
-+ Write an example with env + files
-+ Write an example with default + env
-+ Write an example with clap
-+ Write an example with complex structure like hashmap, array, flattened
 + Support Vault
-+ Imagine a good trait/api to extend and let users fetch config from remote
++ Implement a trait/api to extend and let users fetch config from remote
 + Refactor to let user extend layers
 + Add support of nested struct in envy
 + Fix issue with `#[serde(flatten)] when you use other type than `String` in sub types

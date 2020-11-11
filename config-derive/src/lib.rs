@@ -10,6 +10,7 @@ use syn::{DeriveInput, Error, Ident, Lit, Meta};
 
 use crate::attr::AssignAttrs;
 
+/// proc macro to declare a configuration structure
 #[proc_macro_attribute]
 pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let strukt = syn::parse_macro_input!(item as DeriveInput);
