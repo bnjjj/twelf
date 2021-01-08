@@ -71,6 +71,8 @@ twelf = { version = "0.1", default-features = false, features = ["yaml"] }
 Check [here](./twelf/examples) for more examples.
 
 # TODO:
++ Better error report with explicit layer name
++ Suggest crates like https://github.com/jonasbb/serde_with and add usecases
 + Support Vault
 + Implement a trait/api to extend and let users fetch config from remote
 + Refactor to let user extend layers
