@@ -6,7 +6,7 @@ use heck::KebabCase;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{DeriveInput, Error, Ident, Lit, Meta};
+use syn::{DeriveInput, Error, Ident, Lit, Meta, Type};
 
 use crate::attr::AssignAttrs;
 
@@ -18,6 +18,8 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     // let attrs = syn::parse_macro_input!(attrs as ConfigAttrs);
     let mut fields_name = vec![];
     let mut fields_doc: HashMap<String, Option<String>> = HashMap::new();
+    let mut fields_is_boolean = vec![];
+
     let fields = if let syn::Data::Struct(fields) = &strukt.data {
         fields.fields.iter().map(|field| {
             let ty = field.ty.clone();
@@ -29,7 +31,24 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                 fields_name.push(ident.to_string());
                 fields_doc.insert(ident.to_string(), None);
             }
-
+            // Detect boolean types for clap
+            match &ty {
+                Type::Path(pat) => {
+                    if let Some(type_name) = pat.path.get_ident() {
+                        // let ident_name = type_name.to_string();
+                        if type_name == "bool" {
+                            fields_is_boolean.push(true);
+                        } else {
+                            fields_is_boolean.push(false);
+                        }
+                    } else {
+                        fields_is_boolean.push(false);
+                    }
+                }
+                _ => {
+                    fields_is_boolean.push(false);
+                }
+            }
             let attrs =
                 field
                     .attrs
@@ -123,7 +142,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
 
             pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static, 'static>> {
                 vec![#(
-                   ::twelf::reexports::clap::Arg::with_name(#fields_name).long(#field_names_clap).help(#docs).takes_value(true).global(true)
+                   ::twelf::reexports::clap::Arg::with_name(#fields_name).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
                 ),*]
             }
 
@@ -157,6 +176,8 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                         #(
                             if let Some(vmatch) = matches.value_of(#fields_name) {
                                 map.insert(String::from(#fields_name), vmatch.to_string());
+                            } else if #fields_is_boolean {
+                                map.insert(String::from(#fields_name), matches.is_present(#fields_name).to_string());
                             }
                         )*
 

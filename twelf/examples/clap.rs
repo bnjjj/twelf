@@ -7,6 +7,8 @@ struct Config {
     /// Documentation inside clap, to specifiy db_host
     db_host: String,
     threads: usize,
+    /// Put in verbose mode
+    verbose: bool,
 }
 
 // execute `cargo run --example clap -- --help` to display help and documentation
