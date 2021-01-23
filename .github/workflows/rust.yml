@@ -19,5 +19,3 @@ jobs:
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
-      - name: Run tests without default-features
-        run: cd twelf && cargo test --verbose --no-default-features --features dhall --test dhall && cargo test --verbose --no-default-features --features json --test json && cargo test --verbose --no-default-features --features ini --test ini && cargo test --verbose --no-default-features --features toml --test toml && cargo test --verbose --no-default-features --features yaml --test yaml && cargo test --verbose --no-default-features --features json --features clap --test clap && cargo test --verbose --no-default-features --features json --features toml --test mixed

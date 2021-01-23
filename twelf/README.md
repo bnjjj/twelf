@@ -59,15 +59,6 @@ let config = Conf::with_layers(&[
 // ... your application code
 ```
 
-## Use features to improve compile time
-
-If you don't want to include useless crates if you just use 2 of all available layers you can use features without default-features, example if you use only yaml and env layer.
-
-```toml
-[dependencies]
-twelf = { version = "0.1", default-features = false, features = ["yaml"] }
-```
-
 Check [here](./twelf/examples) for more examples.
 
 # TODO:
