@@ -177,7 +177,9 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                             if let Some(vmatch) = matches.value_of(#fields_name) {
                                 map.insert(String::from(#fields_name), vmatch.to_string());
                             } else if #fields_is_boolean {
-                                map.insert(String::from(#fields_name), matches.is_present(#fields_name).to_string());
+                                if matches.is_present(#fields_name) {
+                                    map.insert(String::from(#fields_name), String::from("true"));
+                                }
                             }
                         )*
 
