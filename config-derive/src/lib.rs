@@ -115,6 +115,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
 
     let code = quote! {
         #[derive(::twelf::reexports::serde::Deserialize)]
+        #[serde(crate = "::twelf::reexports::serde")]
         #strukt
 
         impl #struct_gen #struct_name #struct_gen #struct_where {
@@ -148,7 +149,8 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
 
             fn parse(priority: &::twelf::Layer) -> Result<::twelf::reexports::serde_json::Value, ::twelf::Error>
             {
-                 #[derive(::twelf::reexports::serde::Deserialize, ::twelf::reexports::serde::Serialize)]
+                #[derive(::twelf::reexports::serde::Deserialize, ::twelf::reexports::serde::Serialize)]
+                #[serde(crate = "::twelf::reexports::serde")]
                 #opt_struct
 
                 let res = match priority {
