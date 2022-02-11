@@ -92,10 +92,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let struct_gen = strukt.generics.clone();
     let struct_where = strukt.generics.where_clause.clone();
     let struct_attrs = strukt.attrs.clone();
-    let opt_struct_name = Ident::new(
-        format!("Opt{}", struct_name.to_string()).as_str(),
-        Span::call_site(),
-    );
+    let opt_struct_name = Ident::new(format!("Opt{}", struct_name).as_str(), Span::call_site());
 
     let opt_struct = quote! {
         #(#struct_attrs)*
