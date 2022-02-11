@@ -6,9 +6,14 @@ use twelf::{config, Layer};
 #[config]
 #[derive(Debug)]
 struct Config {
+    #[allow(dead_code)]
     list: Vec<String>,
+
+    #[allow(dead_code)]
     labels: HashMap<String, String>,
+
     #[serde(flatten)]
+    #[allow(dead_code)]
     nested: Nested,
 }
 

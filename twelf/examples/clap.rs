@@ -5,9 +5,14 @@ use twelf::{config, Layer};
 #[derive(Debug)]
 struct Config {
     /// Documentation inside clap, to specifiy db_host
+    #[allow(dead_code)]
     db_host: String,
+
+    #[allow(dead_code)]
     threads: usize,
+
     /// Put in verbose mode
+    #[allow(dead_code)]
     verbose: bool,
 }
 
