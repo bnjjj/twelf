@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 
 use config_derive::config;
@@ -15,10 +17,7 @@ fn missing_values() {
     #[config]
     #[derive(Debug)]
     struct TestCfg {
-        #[allow(dead_code)]
         test: String,
-
-        #[allow(dead_code)]
         another: usize,
     }
     let prio = vec![Layer::Env(None)];

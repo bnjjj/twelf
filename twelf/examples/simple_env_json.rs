@@ -1,12 +1,11 @@
+#![allow(dead_code)]
+
 use twelf::{config, Layer};
 
 #[config]
 #[derive(Debug)]
 struct Config {
-    #[allow(dead_code)]
     db_host: String,
-
-    #[allow(dead_code)]
     threads: usize,
 }
 fn main() {
