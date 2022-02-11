@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use clap_rs as clap;
 use twelf::{config, Layer};
 

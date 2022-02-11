@@ -68,7 +68,7 @@ Check [here](./twelf/examples) for more examples.
 + Implement a trait/api to extend and let users fetch config from remote
 + Refactor to let user extend layers
 + Add support of nested struct in envy
-+ Fix issue with `#[serde(flatten)] when you use other type than `String` in sub types
++ Fix issue with `#[serde(flatten)]` when you use other type than `String` in sub types
 
 
 # Alternatives

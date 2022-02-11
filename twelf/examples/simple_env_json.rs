@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use twelf::{config, Layer};
 
 #[config]

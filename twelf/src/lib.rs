@@ -76,7 +76,7 @@ pub use error::Error;
 
 /// Layer to configure priority when instantiate configuration.
 #[derive(Debug, Clone)]
-pub enum Layer<'a> {
+pub enum Layer {
     /// Env layer taking an optional prefix for environment variables
     Env(Option<String>),
     /// Json layer taking file path to the json file
@@ -90,5 +90,5 @@ pub enum Layer<'a> {
     /// Dhall layer taking file path to the dhall file
     Dhall(PathBuf),
     /// Clap layer taking arguments matches from a clap application
-    Clap(clap_rs::ArgMatches<'a>),
+    Clap(clap_rs::ArgMatches),
 }
