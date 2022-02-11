@@ -12,14 +12,14 @@ repository = "https://github.com/bnjjj/twelf"
 description = "Twelf is a configuration solution for Rust including 12-Factor support. It is designed with layers in order to configure different sources and formats to build your configuration. The main goal is to be very simple using a proc macro."
 
 [dependencies]
-envy = { version = "0.4.1", git = "https://github.com/bnjjj/envy", branch = "master" }
-config-derive = { path = "../config-derive", version = "0.1" }
-serde_json = { version = "1.0.59" }
-thiserror = "1.0.22"
-log = "0.4.11"
-serde = { version = "1.0.117", features = ["derive"] }
-serde_ini = { version = "0.2.0" }
-serde_yaml = { version = "0.8.14" }
-serde_dhall = { version = "0.10.0" }
-toml_rs = { version =  "0.5.7", package = "toml" }
 clap_rs = { version = "2.33.3", package = "clap" }
+config-derive = { path = "../config-derive", version = "0.1" }
+envy = { version = "0.4.1", git = "https://github.com/bnjjj/envy", branch = "master" }
+log = "0.4.14"
+serde = { version = "1", features = ["derive"] }
+serde_dhall = "0.11"
+serde_ini = "0.2.0"
+serde_json = "1"
+serde_yaml = "0.8.23"
+thiserror = "1"
+toml_rs = { version =  "0.5.8", package = "toml" }

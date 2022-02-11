@@ -2,7 +2,7 @@ mod attr;
 
 use std::collections::HashMap;
 
-use heck::KebabCase;
+use heck::ToKebabCase;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
