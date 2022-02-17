@@ -1,6 +1,6 @@
 [package]
 name = "twelf"
-version = "0.1.8"
+version = "0.2.0"
 authors = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
 edition = "2018"
 license = "MIT"
@@ -13,7 +13,7 @@ description = "Twelf is a configuration solution for Rust including 12-Factor su
 
 [dependencies]
 clap_rs = { version = "3.0", package = "clap" }
-config-derive = { path = "../config-derive", version = "0.1" }
+config-derive = { path = "../config-derive", version = "0.2" }
 envy = { version = "0.4.1", git = "https://github.com/bnjjj/envy", branch = "master" }
 log = "0.4.14"
 serde = { version = "1", features = ["derive"] }
