@@ -60,6 +60,7 @@ use std::path::PathBuf;
 pub mod reexports {
     pub use log;
     pub use serde;
+    pub use serde_json;
 
     #[cfg(feature = "clap")]
     pub use clap_rs as clap;
@@ -69,8 +70,6 @@ pub mod reexports {
     pub use serde_dhall;
     #[cfg(feature = "ini")]
     pub use serde_ini;
-    #[cfg(feature = "json")]
-    pub use serde_json;
     #[cfg(feature = "yaml")]
     pub use serde_yaml;
     #[cfg(feature = "toml")]

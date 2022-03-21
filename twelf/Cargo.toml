@@ -19,7 +19,7 @@
     serde         = { version = "1", features = ["derive"] }
     serde_dhall   = { version = "0.11", optional = true }
     serde_ini     = { version = "0.2.0", optional = true }
-    serde_json    = { version = "1", optional = true }
+    serde_json    = "1"
     serde_yaml    = { version = "0.8.23", optional = true }
     thiserror     = "1"
     toml_rs       = { version = "0.5.8", package = "toml", optional = true }
