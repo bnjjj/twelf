@@ -26,7 +26,7 @@
 
 [features]
     clap    = ["clap_rs", "config-derive/clap"]
-    default = ["envy", "dhall", "clap", "ini", "json", "yaml", "toml"]
+    default = ["env", "dhall", "clap", "ini", "json", "yaml", "toml"]
     dhall   = ["serde_dhall", "config-derive/dhall"]
     env     = ["envy", "config-derive/env"]
     ini     = ["serde_ini", "config-derive/ini"]
