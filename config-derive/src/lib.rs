@@ -192,6 +192,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                         let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
                         ::twelf::reexports::serde_json::to_value(tmp_cfg)?
                     },
+                    _ => unimplemented!()
                 };
 
                 Ok(res)
