@@ -30,6 +30,6 @@
     dhall   = ["serde_dhall", "config-derive/dhall"]
     env     = ["envy", "config-derive/env"]
     ini     = ["serde_ini", "config-derive/ini"]
-    json    = ["serde_json", "config-derive/json"]
+    json    = ["config-derive/json"]
     toml    = ["toml_rs", "config-derive/toml"]
     yaml    = ["serde_yaml", "config-derive/yaml"]
