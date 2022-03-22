@@ -110,6 +110,53 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
         .into_iter()
         .map(|ref field_name| field_name.to_kebab_case());
 
+    #[cfg(feature = "json")]
+    let json_branch = quote! { ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?, };
+    #[cfg(not(feature = "json"))]
+    let json_branch = quote! {};
+
+    #[cfg(feature = "env")]
+    let env_branch = quote! { ::twelf::Layer::Env(prefix) => match prefix {
+        Some(prefix) => {
+            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
+            ::twelf::reexports::serde_json::to_value(tmp_cfg)
+        },
+        None => {
+            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
+            ::twelf::reexports::serde_json::to_value(tmp_cfg)
+        },
+    }?,};
+    #[cfg(not(feature = "env"))]
+    let env_branch = quote! {};
+
+    #[cfg(feature = "clap")]
+    let clap_branch = quote! { ::twelf::Layer::Clap(matches) => {
+        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+
+        #(
+            if let Some(vmatch) = matches.value_of(#fields_name) {
+                map.insert(String::from(#fields_name), vmatch.to_string());
+            } else if #fields_is_boolean {
+                if matches.is_present(#fields_name) {
+                    map.insert(String::from(#fields_name), String::from("true"));
+                }
+            }
+        )*
+
+        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
+        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+    },};
+    #[cfg(not(feature = "clap"))]
+    let clap_branch = quote! {};
+    #[cfg(feature = "clap")]
+    let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
+        vec![#(
+           ::twelf::reexports::clap::Arg::new(#fields_name).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
+        ),*]
+    }};
+    #[cfg(not(feature = "clap"))]
+    let clap_method = quote! {};
+
     let code = quote! {
         #[derive(::twelf::reexports::serde::Deserialize)]
         #[serde(crate = "::twelf::reexports::serde")]
@@ -137,12 +184,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
 
                 ::twelf::reexports::serde_json::from_value(::twelf::reexports::serde_json::Value::Object(::twelf::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(|e| ::twelf::Error::Deserialize(e.to_string()))
             }
-
-            pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
-                vec![#(
-                   ::twelf::reexports::clap::Arg::new(#fields_name).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
-                ),*]
-            }
+            #clap_method
 
             fn parse(priority: &::twelf::Layer) -> Result<::twelf::reexports::serde_json::Value, ::twelf::Error>
             {
@@ -151,19 +193,8 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                 #opt_struct
 
                 let res = match priority {
-                    #[cfg(feature = "env")]
-                    ::twelf::Layer::Env(prefix) => match prefix {
-                        Some(prefix) => {
-                            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
-                            ::twelf::reexports::serde_json::to_value(tmp_cfg)
-                        },
-                        None => {
-                            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
-                            ::twelf::reexports::serde_json::to_value(tmp_cfg)
-                        },
-                    }?,
-                    #[cfg(feature = "json")]
-                    ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?,
+                    #env_branch
+                    #json_branch
                     #[cfg(feature = "toml")]
                     ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
                     #[cfg(feature = "yaml")]
@@ -175,24 +206,8 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
                        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
                     },
-                    #[cfg(feature = "clap")]
-                    ::twelf::Layer::Clap(matches) => {
-                        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-
-                        #(
-                            if let Some(vmatch) = matches.value_of(#fields_name) {
-                                map.insert(String::from(#fields_name), vmatch.to_string());
-                            } else if #fields_is_boolean {
-                                if matches.is_present(#fields_name) {
-                                    map.insert(String::from(#fields_name), String::from("true"));
-                                }
-                            }
-                        )*
-
-                        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
-                        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
-                    },
-                    _ => unimplemented!()
+                    #clap_branch
+                    other => unimplemented!("{:?}", other)
                 };
 
                 Ok(res)
