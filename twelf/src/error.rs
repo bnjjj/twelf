@@ -8,7 +8,6 @@ pub enum Error {
     #[cfg(feature = "env")]
     #[error("envy serde error")]
     Envy(#[from] envy::Error),
-    #[cfg(feature = "json")]
     #[error("json serde error")]
     Json(#[from] serde_json::Error),
     #[cfg(feature = "toml")]
