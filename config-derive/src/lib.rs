@@ -6,7 +6,7 @@ use heck::ToKebabCase;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{DeriveInput, Error, Ident, Lit, Meta, Type};
+use syn::{DeriveInput, Error, Generics, Ident, Lit, Meta, Type};
 
 use crate::attr::AssignAttrs;
 
@@ -105,57 +105,21 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
         Some(doc) => doc.trim().to_string(),
         None => String::new(),
     });
-    let field_names_clap = fields_name
-        .clone()
-        .into_iter()
-        .map(|ref field_name| field_name.to_kebab_case());
 
-    #[cfg(feature = "json")]
-    let json_branch = quote! { ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?, };
-    #[cfg(not(feature = "json"))]
-    let json_branch = quote! {};
+    let json_branch = build_json_branch();
+    let toml_branch = build_toml_branch();
+    let yaml_branch = build_yaml_branch();
+    let dhall_branch = build_dhall_branch();
+    let ini_branch = build_ini_branch(&opt_struct_name, &struct_gen);
 
-    #[cfg(feature = "env")]
-    let env_branch = quote! { ::twelf::Layer::Env(prefix) => match prefix {
-        Some(prefix) => {
-            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
-            ::twelf::reexports::serde_json::to_value(tmp_cfg)
-        },
-        None => {
-            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
-            ::twelf::reexports::serde_json::to_value(tmp_cfg)
-        },
-    }?,};
-    #[cfg(not(feature = "env"))]
-    let env_branch = quote! {};
-
-    #[cfg(feature = "clap")]
-    let clap_branch = quote! { ::twelf::Layer::Clap(matches) => {
-        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-
-        #(
-            if let Some(vmatch) = matches.value_of(#fields_name) {
-                map.insert(String::from(#fields_name), vmatch.to_string());
-            } else if #fields_is_boolean {
-                if matches.is_present(#fields_name) {
-                    map.insert(String::from(#fields_name), String::from("true"));
-                }
-            }
-        )*
-
-        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
-        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
-    },};
-    #[cfg(not(feature = "clap"))]
-    let clap_branch = quote! {};
-    #[cfg(feature = "clap")]
-    let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
-        vec![#(
-           ::twelf::reexports::clap::Arg::new(#fields_name).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
-        ),*]
-    }};
-    #[cfg(not(feature = "clap"))]
-    let clap_method = quote! {};
+    let env_branch = build_env_branch(&opt_struct_name, &struct_gen);
+    let (clap_branch, clap_method) = build_clap_branch(
+        &opt_struct_name,
+        &struct_gen,
+        &fields_name,
+        &fields_is_boolean,
+        docs,
+    );
 
     let code = quote! {
         #[derive(::twelf::reexports::serde::Deserialize)]
@@ -195,17 +159,10 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                 let res = match priority {
                     #env_branch
                     #json_branch
-                    #[cfg(feature = "toml")]
-                    ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,
-                    #[cfg(feature = "yaml")]
-                    ::twelf::Layer::Yaml(filepath) => ::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?,
-                    #[cfg(feature = "dhall")]
-                    ::twelf::Layer::Dhall(filepath) => ::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?,
-                    #[cfg(feature = "ini")]
-                    ::twelf::Layer::Ini(filepath) => {
-                       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
-                       ::twelf::reexports::serde_json::to_value(tmp_cfg)?
-                    },
+                    #toml_branch
+                    #yaml_branch
+                    #dhall_branch
+                    #ini_branch
                     #clap_branch
                     other => unimplemented!("{:?}", other)
                 };
@@ -216,4 +173,106 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     TokenStream::from(code)
+}
+
+fn build_clap_branch(
+    opt_struct_name: &Ident,
+    struct_gen: &Generics,
+    fields_name: &[String],
+    fields_is_boolean: &[bool],
+    docs: impl Iterator<Item = String>,
+) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
+    #[cfg(feature = "clap")]
+    let field_names_clap = fields_name
+        .iter()
+        .map(|field_name| field_name.to_kebab_case());
+
+    #[cfg(feature = "clap")]
+    let clap_branch = quote! { ::twelf::Layer::Clap(matches) => {
+        let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+
+        #(
+            if let Some(vmatch) = matches.value_of(#fields_name) {
+                map.insert(String::from(#fields_name), vmatch.to_string());
+            } else if #fields_is_boolean {
+                if matches.is_present(#fields_name) {
+                    map.insert(String::from(#fields_name), String::from("true"));
+                }
+            }
+        )*
+
+        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
+        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+    },};
+    #[cfg(not(feature = "clap"))]
+    let clap_branch = quote! {};
+    #[cfg(feature = "clap")]
+    let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
+        vec![#(
+           ::twelf::reexports::clap::Arg::new(#fields_name).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
+        ),*]
+    }};
+    #[cfg(not(feature = "clap"))]
+    let clap_method = quote! {};
+    (clap_branch, clap_method)
+}
+
+fn build_env_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+    #[cfg(feature = "env")]
+    let env_branch = quote! { ::twelf::Layer::Env(prefix) => match prefix {
+        Some(prefix) => {
+            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
+            ::twelf::reexports::serde_json::to_value(tmp_cfg)
+        },
+        None => {
+            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
+            ::twelf::reexports::serde_json::to_value(tmp_cfg)
+        },
+    }?,};
+    #[cfg(not(feature = "env"))]
+    let env_branch = quote! {};
+    env_branch
+}
+
+fn build_json_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "json")]
+    let json_branch = quote! { ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?, };
+    #[cfg(not(feature = "json"))]
+    let json_branch = quote! {};
+    json_branch
+}
+
+fn build_toml_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "toml")]
+    let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?, };
+    #[cfg(not(feature = "toml"))]
+    let toml_branch = quote! {};
+    toml_branch
+}
+
+fn build_yaml_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "yaml")]
+    let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => ::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?, };
+    #[cfg(not(feature = "yaml"))]
+    let yaml_branch = quote! {};
+    yaml_branch
+}
+
+fn build_dhall_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "dhall")]
+    let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => ::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?, };
+    #[cfg(not(feature = "dhall"))]
+    let dhall_branch = quote! {};
+    dhall_branch
+}
+
+fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+    #[cfg(feature = "ini")]
+    let ini_branch = quote! { ::twelf::Layer::Ini(filepath) => {
+       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
+       ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+    }, };
+    #[cfg(not(feature = "ini"))]
+    let ini_branch = quote! {};
+    ini_branch
 }
