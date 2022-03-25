@@ -2,14 +2,14 @@
     authors     = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
     categories  = ["config"]
     description = "Proc macro used by Twelf crate"
-    edition     = "2018"
+    edition     = "2021"
     homepage    = "https://github.com/bnjjj/twelf"
     keywords    = ["config", "configuration", "env", "environment", "settings"]
     license     = "MIT"
     name        = "config-derive"
     readme      = "README.md"
     repository  = "https://github.com/bnjjj/twelf"
-    version     = "0.2.0"
+    version     = "0.3.0"
 
 
     # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

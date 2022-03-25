@@ -19,7 +19,7 @@ For now it supports :
 
 ## Simple with JSON and environment variables
 
-```rust
+```rust,no_run
 use twelf::{config, Layer};
 
 #[config]
@@ -62,16 +62,15 @@ let config = Conf::with_layers(&[
 
 Check [here](./twelf/examples) for more examples.
 
-# TODO:
+## Features
 
-- Better error report with explicit layer name
-- Suggest crates like https://github.com/jonasbb/serde_with and add usecases
-- Support Vault
-- Implement a trait/api to extend and let users fetch config from remote
-- Refactor to let user extend layers
-- Add support of nested struct in envy
-- Fix issue with `#[serde(flatten)] when you use other type than `String` in sub types
-- Add support for other cli libs
+Twelf supports crate features, if you only want support for `json`, `env` and `toml` then you just have to add this to your `Cargo.toml`
+
+```toml
+twelf = { version = "0.3", default-features = false, features = ["json", "toml", "env"] }
+```
+
+Default features are `["env", "dhall", "clap", "ini", "json", "yaml", "toml"]`
 
 # Alternatives
 

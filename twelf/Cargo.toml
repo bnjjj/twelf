@@ -2,18 +2,18 @@
     authors     = ["Benjamin Coenen <5719034+bnjjj@users.noreply.github.com>"]
     categories  = ["config"]
     description = "Twelf is a configuration solution for Rust including 12-Factor support. It is designed with layers in order to configure different sources and formats to build your configuration. The main goal is to be very simple using a proc macro."
-    edition     = "2018"
+    edition     = "2021"
     homepage    = "https://github.com/bnjjj/twelf"
     keywords    = ["config", "configuration", "env", "environment", "settings"]
     license     = "MIT"
     name        = "twelf"
     readme      = "../README.md"
     repository  = "https://github.com/bnjjj/twelf"
-    version     = "0.2.0"
+    version     = "0.3.0"
 
 [dependencies]
     clap_rs       = { version = "3.0", package = "clap", optional = true }
-    config-derive = { path = "../config-derive", version = "0.2" }
+    config-derive = { path = "../config-derive", version = "0.3" }
     envy          = { version = "0.4.1", git = "https://github.com/bnjjj/envy", branch = "master", optional = true }
     log           = "0.4.14"
     serde         = { version = "1", features = ["derive"] }
