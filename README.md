@@ -37,7 +37,7 @@ let config = Conf::with_layers(&[
 
 ## Example with clap support
 
-```rust
+```rust,compile_fail
 use twelf::{config, Layer};
 
 #[config]
@@ -48,7 +48,7 @@ struct Conf {
 }
 
 // Will generate global arguments for each of your fields inside your configuration struct
-let app = clap::App::new("test").args(&Conf::clap_args());
+let app = clap::Command::new("test").args(&Conf::clap_args());
 
 // Init configuration with layers, each layers override only existing fields
 let config = Conf::with_layers(&[
