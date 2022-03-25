@@ -16,7 +16,7 @@ fn clap_with_array_and_hashmap() {
         arrays: Vec<String>,
     }
     let clap_args = Conf::clap_args();
-    let mut app = clap::App::new("test").args(&clap_args);
+    let mut app = clap::Command::new("test").args(&clap_args);
     let mut help_msg = vec![];
 
     app.write_long_help(&mut help_msg).unwrap();

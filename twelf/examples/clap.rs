@@ -16,7 +16,7 @@ struct Config {
 // execute `cargo run --example clap -- --help` to display help and documentation
 // execute `cargo run --example clap -- --db-host localhost --threads 5` to set configuration
 fn main() {
-    let matches = clap::App::new("test_clap")
+    let matches = clap::Command::new("test_clap")
         .args(&Config::clap_args())
         .get_matches();
     let config =
