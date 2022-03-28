@@ -13,7 +13,7 @@ For now it supports :
 - Reading from `TOML`, `YAML`, `JSON`, `DHALL`, `INI` files
 - Reading from environment variables: it supports `HashMap` structure with `MY_VARIABLE="mykey=myvalue,mykey2=myvalue2"` and also array like `MY_VARIABLE=first,second` thanks to [envy](https://github.com/softprops/envy).
 - All [serde](https://serde.rs) attributes can be used in your struct to customize your configuration as you wish
-- Reading your configuration from your command line built with [clap](https://github.com/clap-rs/clap) (ATTENTION: if you're using version < v3 use the `twelf@1.8` version)
+- Reading your configuration from your command line built with [clap](https://github.com/clap-rs/clap) (ATTENTION: if you're using version < v3 use the `twelf@0.1.8` version)
 
 # Usage
 
