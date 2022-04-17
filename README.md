@@ -49,6 +49,7 @@ struct Conf {
 
 // Will generate global arguments for each of your fields inside your configuration struct
 let app = clap::Command::new("test").args(&Conf::clap_args());
+// If you're looking for how to use with clap derive feature, check in the examples directory (twelf/examples/clap_derive.rs)
 
 // Init configuration with layers, each layers override only existing fields
 let config = Conf::with_layers(&[
@@ -67,7 +68,7 @@ Check [here](./twelf/examples) for more examples.
 Twelf supports crate features, if you only want support for `json`, `env` and `toml` then you just have to add this to your `Cargo.toml`
 
 ```toml
-twelf = { version = "0.3", default-features = false, features = ["json", "toml", "env"] }
+twelf = { version = "0.4", default-features = false, features = ["json", "toml", "env"] }
 ```
 
 Default features are `["env", "dhall", "clap", "ini", "json", "yaml", "toml"]`

@@ -2,6 +2,7 @@ mod attr;
 
 use std::collections::HashMap;
 
+#[cfg(feature = "clap")]
 use heck::ToKebabCase;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -131,7 +132,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                 use std::iter::FromIterator;
                 let mut res: std::collections::HashMap<String, ::twelf::reexports::serde_json::Value> = std::collections::HashMap::new();
                 for layer in layers {
-                    let extension = Self::parse(layer)?;
+                    let extension = Self::parse_twelf(layer)?;
                     res.extend(
                         extension
                             .as_object()
@@ -146,11 +147,11 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                     ::twelf::reexports::log::debug!(target: "twelf", "{}={}", key, val);
                 }
 
-                ::twelf::reexports::serde_json::from_value(::twelf::reexports::serde_json::Value::Object(::twelf::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(|e| ::twelf::Error::Deserialize(e.to_string()))
+                ::twelf::reexports::serde_json::from_value(::twelf::reexports::serde_json::Value::Object(::twelf::reexports::serde_json::Map::from_iter(res.into_iter()))).map_err(|e| ::twelf::Error::Deserialize(format!("config error: {}", e.to_string())))
             }
             #clap_method
 
-            fn parse(priority: &::twelf::Layer) -> Result<::twelf::reexports::serde_json::Value, ::twelf::Error>
+            fn parse_twelf(priority: &::twelf::Layer) -> Result<::twelf::reexports::serde_json::Value, ::twelf::Error>
             {
                 #[derive(::twelf::reexports::serde::Deserialize, ::twelf::reexports::serde::Serialize)]
                 #[serde(crate = "::twelf::reexports::serde")]
@@ -188,14 +189,16 @@ fn build_clap_branch(
         .map(|field_name| field_name.to_kebab_case());
 
     #[cfg(feature = "clap")]
+    let field_names_clap_cloned = field_names_clap.clone();
+    #[cfg(feature = "clap")]
     let clap_branch = quote! { ::twelf::Layer::Clap(matches) => {
         let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
         #(
-            if let Some(vmatch) = matches.value_of(#fields_name) {
+            if let Some(vmatch) = matches.value_of(#field_names_clap_cloned) {
                 map.insert(String::from(#fields_name), vmatch.to_string());
             } else if #fields_is_boolean {
-                if matches.is_present(#fields_name) {
+                if matches.is_present(#field_names_clap_cloned) {
                     map.insert(String::from(#fields_name), String::from("true"));
                 }
             }
@@ -209,7 +212,7 @@ fn build_clap_branch(
     #[cfg(feature = "clap")]
     let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
         vec![#(
-           ::twelf::reexports::clap::Arg::new(#fields_name).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
+           ::twelf::reexports::clap::Arg::new(#field_names_clap).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
         ),*]
     }};
     #[cfg(not(feature = "clap"))]
