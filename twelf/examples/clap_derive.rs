@@ -1,30 +1,19 @@
 #![allow(dead_code)]
 
+use clap::{CommandFactory, Parser};
 use clap_rs as clap;
-use clap::{Parser, Subcommand, CommandFactory};
 use twelf::{config, Layer};
 
 #[config]
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Config {
-    #[clap(
-        long,
-        help = "Documentation inside clap, to specifiy db_host",
-    )]
+    #[clap(long, help = "Documentation inside clap, to specifiy db_host")]
     db_host: String,
-    #[clap(
-        long,
-        short,
-        help = "The number of threads",
-    )]
-    #[clap(required = false)]
+    #[clap(long, short, help = "The number of threads")]
+    #[clap(required = false, default_value_t = 55)]
     threads: usize,
-    #[clap(
-        long,
-        short,
-        help = "Put in verbose mode",
-    )]
+    #[clap(long, short, help = "Put in verbose mode")]
     verbose: bool,
 }
 

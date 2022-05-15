@@ -59,6 +59,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                         Some(attr_ident) if attr_ident == "serde" => {
                             attr.parse_args::<AssignAttrs>().is_err()
                         }
+                        Some(attr_ident) if attr_ident == "clap" => false,
                         Some(attr_ident) if attr_ident == "doc" => {
                             let doc = match attr.parse_meta() {
                                 Ok(Meta::NameValue(ref nv)) if nv.path.is_ident("doc") => {
@@ -92,7 +93,10 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let struct_vis = strukt.vis.clone();
     let struct_gen = strukt.generics.clone();
     let struct_where = strukt.generics.where_clause.clone();
-    let struct_attrs = strukt.attrs.clone();
+    let struct_attrs =
+        strukt.attrs.clone().into_iter().filter(
+            |attr| matches!(attr.path.get_ident(), Some(attr_ident) if attr_ident == "serde"),
+        );
     let opt_struct_name = Ident::new(format!("Opt{}", struct_name).as_str(), Span::call_site());
 
     let opt_struct = quote! {
