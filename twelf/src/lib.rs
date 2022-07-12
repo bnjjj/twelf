@@ -12,7 +12,7 @@ pub mod reexports {
 
     #[cfg(feature = "clap")]
     pub use clap_rs as clap;
-    #[cfg(feature = "env")]
+    #[cfg(any(feature = "env", feature = "clap"))]
     pub use envy;
     #[cfg(feature = "dhall")]
     pub use serde_dhall;

@@ -25,7 +25,7 @@
     toml_rs       = { version = "0.5.8", package = "toml", optional = true }
 
 [features]
-    clap    = ["clap_rs", "config-derive/clap"]
+    clap    = ["clap_rs", "config-derive/clap", "envy"]
     default = ["env", "dhall", "clap", "ini", "json", "yaml", "toml"]
     dhall   = ["serde_dhall", "config-derive/dhall"]
     env     = ["envy", "config-derive/env"]

@@ -5,7 +5,7 @@ use thiserror::Error as ErrorTrait;
 pub enum Error {
     #[error("io error")]
     Io(#[from] std::io::Error),
-    #[cfg(feature = "env")]
+    #[cfg(any(feature = "env", feature = "clap"))]
     #[error("envy serde error")]
     Envy(#[from] envy::Error),
     #[error("json serde error")]

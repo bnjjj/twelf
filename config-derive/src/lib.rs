@@ -224,15 +224,15 @@ fn build_clap_branch(
     (clap_branch, clap_method)
 }
 
-fn build_env_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+fn build_env_branch(_opt_struct_name: &Ident, _struct_gen: &Generics) -> proc_macro2::TokenStream {
     #[cfg(feature = "env")]
     let env_branch = quote! { ::twelf::Layer::Env(prefix) => match prefix {
         Some(prefix) => {
-            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
+            let tmp_cfg: #_opt_struct_name #_struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
             ::twelf::reexports::serde_json::to_value(tmp_cfg)
         },
         None => {
-            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
+            let tmp_cfg: #_opt_struct_name #_struct_gen = ::twelf::reexports::envy::from_env()?;
             ::twelf::reexports::serde_json::to_value(tmp_cfg)
         },
     }?,};
@@ -273,10 +273,10 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
     dhall_branch
 }
 
-fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+fn build_ini_branch(_opt_struct_name: &Ident, _struct_gen: &Generics) -> proc_macro2::TokenStream {
     #[cfg(feature = "ini")]
     let ini_branch = quote! { ::twelf::Layer::Ini(filepath) => {
-       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
+       let tmp_cfg: #_opt_struct_name #_struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
     }, };
     #[cfg(not(feature = "ini"))]
