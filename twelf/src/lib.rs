@@ -2,6 +2,13 @@
 
 mod error;
 
+#[cfg(any(
+    feature = "json",
+    feature = "yaml",
+    feature = "toml",
+    feature = "ini",
+    feature = "dhall"
+))]
 use std::path::PathBuf;
 
 #[doc(hidden)]

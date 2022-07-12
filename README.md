@@ -71,7 +71,17 @@ Twelf supports crate features, if you only want support for `json`, `env` and `t
 twelf = { version = "0.4", default-features = false, features = ["json", "toml", "env"] }
 ```
 
-Default features are `["env", "dhall", "clap", "ini", "json", "yaml", "toml"]`
+Default features are `["env", "clap"]`
+
+# Contributing
+
+Feel free to contribute to the `twelf` project.
+
+Enable all features when testing changes to the crate:
+
+```console
+cargo test --all-features
+```
 
 # Alternatives
 

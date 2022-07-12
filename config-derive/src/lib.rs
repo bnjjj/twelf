@@ -7,7 +7,9 @@ use heck::ToKebabCase;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::quote;
-use syn::{DeriveInput, Error, Generics, Ident, Lit, Meta, Type};
+#[cfg(any(feature = "env", feature = "clap", feature = "ini"))]
+use syn::Generics;
+use syn::{DeriveInput, Error, Ident, Lit, Meta, Type};
 
 use crate::attr::AssignAttrs;
 
@@ -106,6 +108,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
         }
     };
 
+    #[cfg(feature = "clap")]
     let docs = fields_doc.values().map(|doc| match doc {
         Some(doc) => doc.trim().to_string(),
         None => String::new(),
@@ -115,9 +118,20 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let toml_branch = build_toml_branch();
     let yaml_branch = build_yaml_branch();
     let dhall_branch = build_dhall_branch();
+
+    #[cfg(not(feature = "ini"))]
+    let ini_branch = quote! {};
+    #[cfg(feature = "ini")]
     let ini_branch = build_ini_branch(&opt_struct_name, &struct_gen);
 
+    #[cfg(not(feature = "env"))]
+    let env_branch = quote! {};
+    #[cfg(feature = "env")]
     let env_branch = build_env_branch(&opt_struct_name, &struct_gen);
+
+    #[cfg(not(feature = "clap"))]
+    let (clap_branch, clap_method) = (quote! {}, quote! {});
+    #[cfg(feature = "clap")]
     let (clap_branch, clap_method) = build_clap_branch(
         &opt_struct_name,
         &struct_gen,
@@ -180,6 +194,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     TokenStream::from(code)
 }
 
+#[cfg(feature = "clap")]
 fn build_clap_branch(
     opt_struct_name: &Ident,
     struct_gen: &Generics,
@@ -187,14 +202,11 @@ fn build_clap_branch(
     fields_is_boolean: &[bool],
     docs: impl Iterator<Item = String>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
-    #[cfg(feature = "clap")]
     let field_names_clap = fields_name
         .iter()
         .map(|field_name| field_name.to_kebab_case());
 
-    #[cfg(feature = "clap")]
     let field_names_clap_cloned = field_names_clap.clone();
-    #[cfg(feature = "clap")]
     let clap_branch = quote! { ::twelf::Layer::Clap(matches) => {
         let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
@@ -211,34 +223,26 @@ fn build_clap_branch(
         let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
         ::twelf::reexports::serde_json::to_value(tmp_cfg)?
     },};
-    #[cfg(not(feature = "clap"))]
-    let clap_branch = quote! {};
-    #[cfg(feature = "clap")]
     let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
         vec![#(
            ::twelf::reexports::clap::Arg::new(#field_names_clap).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
         ),*]
     }};
-    #[cfg(not(feature = "clap"))]
-    let clap_method = quote! {};
     (clap_branch, clap_method)
 }
 
-fn build_env_branch(_opt_struct_name: &Ident, _struct_gen: &Generics) -> proc_macro2::TokenStream {
-    #[cfg(feature = "env")]
-    let env_branch = quote! { ::twelf::Layer::Env(prefix) => match prefix {
+#[cfg(feature = "env")]
+fn build_env_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+    quote! { ::twelf::Layer::Env(prefix) => match prefix {
         Some(prefix) => {
-            let tmp_cfg: #_opt_struct_name #_struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
+            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
             ::twelf::reexports::serde_json::to_value(tmp_cfg)
         },
         None => {
-            let tmp_cfg: #_opt_struct_name #_struct_gen = ::twelf::reexports::envy::from_env()?;
+            let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
             ::twelf::reexports::serde_json::to_value(tmp_cfg)
         },
-    }?,};
-    #[cfg(not(feature = "env"))]
-    let env_branch = quote! {};
-    env_branch
+    }?,}
 }
 
 fn build_json_branch() -> proc_macro2::TokenStream {
@@ -273,13 +277,10 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
     dhall_branch
 }
 
-fn build_ini_branch(_opt_struct_name: &Ident, _struct_gen: &Generics) -> proc_macro2::TokenStream {
-    #[cfg(feature = "ini")]
-    let ini_branch = quote! { ::twelf::Layer::Ini(filepath) => {
-       let tmp_cfg: #_opt_struct_name #_struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
+#[cfg(feature = "ini")]
+fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+    quote! { ::twelf::Layer::Ini(filepath) => {
+       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
-    }, };
-    #[cfg(not(feature = "ini"))]
-    let ini_branch = quote! {};
-    ini_branch
+    }, }
 }
