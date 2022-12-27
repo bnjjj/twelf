@@ -150,14 +150,15 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                 use std::iter::FromIterator;
                 let mut res: std::collections::HashMap<String, ::twelf::reexports::serde_json::Value> = std::collections::HashMap::new();
                 for layer in layers {
-                    let extension = Self::parse_twelf(layer)?;
-                    res.extend(
-                        extension
-                            .as_object()
-                            .ok_or_else(|| ::twelf::Error::InvalidFormat)?
-                            .to_owned()
-                            .into_iter().filter(|(_k, v)| !v.is_null()),
-                    );
+                    let (extension,defaulted) = Self::parse_twelf(layer)?;
+                    let extension: std::collections::HashMap<_,_> = extension
+                        .as_object()
+                        .ok_or_else(|| ::twelf::Error::InvalidFormat)?
+                        .to_owned()
+                        .into_iter().filter(|(k, v)| ((defaulted.contains_key(k) && !defaulted[k]) || !res.contains_key(k)) && !v.is_null())
+                        .collect(); // must collect, as filter uses res
+
+                    res.extend(extension);
                 }
 
                 ::twelf::reexports::log::debug!(target: "twelf", "configuration:");
@@ -169,13 +170,13 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
             }
             #clap_method
 
-            fn parse_twelf(priority: &::twelf::Layer) -> Result<::twelf::reexports::serde_json::Value, ::twelf::Error>
+            fn parse_twelf(priority: &::twelf::Layer) -> Result<(::twelf::reexports::serde_json::Value,std::collections::HashMap<String,bool>), ::twelf::Error>
             {
                 #[derive(::twelf::reexports::serde::Deserialize, ::twelf::reexports::serde::Serialize)]
                 #[serde(crate = "::twelf::reexports::serde")]
                 #opt_struct
 
-                let res = match priority {
+                let (res,defaulted) = match priority {
                     #env_branch
                     #json_branch
                     #toml_branch
@@ -186,7 +187,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                     other => unimplemented!("{:?}", other)
                 };
 
-                Ok(res)
+                Ok((res,defaulted.unwrap_or(std::collections::HashMap::new())))
             }
         }
     };
@@ -209,34 +210,40 @@ fn build_clap_branch(
     let field_names_clap_cloned = field_names_clap.clone();
     let clap_branch = quote! { ::twelf::Layer::Clap(matches) => {
         let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+        let mut defaulted: std::collections::HashMap<String, bool> = std::collections::HashMap::new();
 
         #(
             let field = String::from(#fields_name);
 
-            let mut insert_into_map = |vals: ::twelf::reexports::clap::parser::RawValues| {
+            let mut insert_into_map = |vals: ::twelf::reexports::clap::parser::RawValues, is_default: bool| {
+                let mut key = field.clone();
+                defaulted.insert(key.clone(), is_default);
+
                 for val in vals.into_iter() {
                     // hacky way of formatting everything to a string:
                     let s = format!("{:?}", val);
                     let s = s.strip_prefix("\"").unwrap_or(&s);
                     let s = s.strip_suffix("\"").unwrap_or(&s);
 
-                    if let Some(existing_val) = map.get_mut(&field) {
+                    if let Some(existing_val) = map.get_mut(&key) {
                         *existing_val = existing_val.clone() + "," + s;
                     } else {
-                        map.insert(field.clone(), s.to_string());
+                        map.insert(key.clone(), s.to_string());
                     }
                 }
             };
 
             if let Some(vals) = matches.try_get_raw(#fields_name).unwrap_or(None) {
-                insert_into_map(vals);
+                let is_default = matches.value_source(#fields_name).unwrap() == ::twelf::reexports::clap::parser::ValueSource::DefaultValue;
+                insert_into_map(vals, is_default);
             } else if let Some(vals) = matches.try_get_raw(#field_names_clap_cloned).unwrap_or(None) {
-                insert_into_map(vals);
+                let is_default = matches.value_source(#field_names_clap_cloned).unwrap() == ::twelf::reexports::clap::parser::ValueSource::DefaultValue;
+                insert_into_map(vals, is_default);
             }
         )*
 
         let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
-        ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+        (::twelf::reexports::serde_json::to_value(tmp_cfg)?,Some(defaulted))
     },};
     let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg> {
         vec![#(
@@ -256,18 +263,18 @@ fn build_env_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macr
     quote! { ::twelf::Layer::Env(prefix) => match prefix {
         Some(prefix) => {
             let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::prefixed(prefix).from_env()?;
-            ::twelf::reexports::serde_json::to_value(tmp_cfg)
+            (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)
         },
         None => {
             let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_env()?;
-            ::twelf::reexports::serde_json::to_value(tmp_cfg)
+            (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)
         },
-    }?,}
+    },}
 }
 
 fn build_json_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "json")]
-    let json_branch = quote! { ::twelf::Layer::Json(filepath) => ::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?, };
+    let json_branch = quote! { ::twelf::Layer::Json(filepath) => (::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?,None), };
     #[cfg(not(feature = "json"))]
     let json_branch = quote! {};
     json_branch
@@ -275,7 +282,7 @@ fn build_json_branch() -> proc_macro2::TokenStream {
 
 fn build_toml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "toml")]
-    let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => ::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?, };
+    let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => (::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,None), };
     #[cfg(not(feature = "toml"))]
     let toml_branch = quote! {};
     toml_branch
@@ -283,7 +290,7 @@ fn build_toml_branch() -> proc_macro2::TokenStream {
 
 fn build_yaml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "yaml")]
-    let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => ::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?, };
+    let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => (::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?,None), };
     #[cfg(not(feature = "yaml"))]
     let yaml_branch = quote! {};
     yaml_branch
@@ -291,7 +298,7 @@ fn build_yaml_branch() -> proc_macro2::TokenStream {
 
 fn build_dhall_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "dhall")]
-    let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => ::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?, };
+    let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => (::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?,None), };
     #[cfg(not(feature = "dhall"))]
     let dhall_branch = quote! {};
     dhall_branch
@@ -301,6 +308,6 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
 fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
     quote! { ::twelf::Layer::Ini(filepath) => {
        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
-       ::twelf::reexports::serde_json::to_value(tmp_cfg)?
+       (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)
     }, }
 }
