@@ -20,8 +20,8 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let struct_name = strukt.ident.clone();
     // let attrs = syn::parse_macro_input!(attrs as ConfigAttrs);
     let mut fields_name = vec![];
-    let mut fields_type = vec![];
     let mut fields_doc: HashMap<String, Option<String>> = HashMap::new();
+    let mut fields_is_boolean = vec![];
 
     let fields = if let syn::Data::Struct(fields) = &strukt.data {
         fields.fields.iter().map(|field| {
@@ -32,8 +32,25 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
 
             if let Some(ident) = &ident {
                 fields_name.push(ident.to_string());
-                fields_type.push(ty.clone());
                 fields_doc.insert(ident.to_string(), None);
+            }
+            // Detect boolean types for clap
+            match &ty {
+                Type::Path(pat) => {
+                    if let Some(type_name) = pat.path.get_ident() {
+                        // let ident_name = type_name.to_string();
+                        if type_name == "bool" {
+                            fields_is_boolean.push(true);
+                        } else {
+                            fields_is_boolean.push(false);
+                        }
+                    } else {
+                        fields_is_boolean.push(false);
+                    }
+                }
+                _ => {
+                    fields_is_boolean.push(false);
+                }
             }
             let attrs =
                 field
@@ -119,7 +136,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
         &opt_struct_name,
         &struct_gen,
         &fields_name,
-        &fields_type,
+        &fields_is_boolean,
         docs,
     );
 
@@ -182,7 +199,7 @@ fn build_clap_branch(
     opt_struct_name: &Ident,
     struct_gen: &Generics,
     fields_name: &[String],
-    fields_type: &[Type],
+    fields_is_boolean: &[bool],
     docs: impl Iterator<Item = String>,
 ) -> (proc_macro2::TokenStream, proc_macro2::TokenStream) {
     let field_names_clap = fields_name
@@ -194,13 +211,27 @@ fn build_clap_branch(
         let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
         #(
-            if let Some(val) = matches.get_one::<#fields_type>(#field_names_clap_cloned) {
-                // hacky way of formatting everything to a string:
-                let s = format!("{:?}", val);
-                let s = s.strip_prefix("\"").unwrap_or(&s);
-                let s = s.strip_suffix("\"").unwrap_or(&s);
+            let field = String::from(#fields_name);
 
-                map.insert(String::from(#fields_name), s.to_string());
+            let mut insert_into_map = |vals: ::twelf::reexports::clap::parser::RawValues| {
+                for val in vals.into_iter() {
+                    // hacky way of formatting everything to a string:
+                    let s = format!("{:?}", val);
+                    let s = s.strip_prefix("\"").unwrap_or(&s);
+                    let s = s.strip_suffix("\"").unwrap_or(&s);
+
+                    if let Some(existing_val) = map.get_mut(&field) {
+                        *existing_val = existing_val.clone() + "," + s;
+                    } else {
+                        map.insert(field.clone(), s.to_string());
+                    }
+                }
+            };
+
+            if let Some(vals) = matches.try_get_raw(#fields_name).unwrap_or(None) {
+                insert_into_map(vals);
+            } else if let Some(vals) = matches.try_get_raw(#field_names_clap_cloned).unwrap_or(None) {
+                insert_into_map(vals);
             }
         )*
 
@@ -210,6 +241,11 @@ fn build_clap_branch(
     let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg> {
         vec![#(
            ::twelf::reexports::clap::Arg::new(#field_names_clap).long(#field_names_clap).help(#docs)
+            .action(if (#fields_is_boolean) {
+                ::twelf::reexports::clap::ArgAction::SetTrue
+            } else {
+                ::twelf::reexports::clap::ArgAction::Set
+            })
         ),*]
     }};
     (clap_branch, clap_method)
