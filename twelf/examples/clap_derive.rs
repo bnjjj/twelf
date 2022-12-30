@@ -20,7 +20,7 @@ struct Config {
 // execute `cargo run --example clap_derive -- --help` to display help and documentation
 // execute `cargo run --example clap_derive -- --db-host localhost --threads 5` to set configuration
 fn main() {
-    let matches = Config::command().ignore_errors(true).get_matches();
+    let matches = Config::command().get_matches();
     let config =
         Config::with_layers(&[Layer::Env(Some(String::from("APP_"))), Layer::Clap(matches)])
             .unwrap();

@@ -211,21 +211,41 @@ fn build_clap_branch(
         let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
         #(
-            if let Some(vmatch) = matches.value_of(#field_names_clap_cloned) {
-                map.insert(String::from(#fields_name), vmatch.to_string());
-            } else if #fields_is_boolean {
-                if matches.is_present(#field_names_clap_cloned) {
-                    map.insert(String::from(#fields_name), String::from("true"));
+            let field = String::from(#fields_name);
+
+            let mut insert_into_map = |vals: ::twelf::reexports::clap::parser::RawValues| {
+                for val in vals.into_iter() {
+                    // hacky way of formatting everything to a string:
+                    let s = format!("{:?}", val);
+                    let s = s.strip_prefix("\"").unwrap_or(&s);
+                    let s = s.strip_suffix("\"").unwrap_or(&s);
+
+                    if let Some(existing_val) = map.get_mut(&field) {
+                        *existing_val = existing_val.clone() + "," + s;
+                    } else {
+                        map.insert(field.clone(), s.to_string());
+                    }
                 }
+            };
+
+            if let Some(vals) = matches.try_get_raw(#fields_name).unwrap_or(None) {
+                insert_into_map(vals);
+            } else if let Some(vals) = matches.try_get_raw(#field_names_clap_cloned).unwrap_or(None) {
+                insert_into_map(vals);
             }
         )*
 
         let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::envy::from_iter(map.into_iter())?;
         ::twelf::reexports::serde_json::to_value(tmp_cfg)?
     },};
-    let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg<'static>> {
+    let clap_method = quote! { pub fn clap_args() -> Vec<::twelf::reexports::clap::Arg> {
         vec![#(
-           ::twelf::reexports::clap::Arg::new(#field_names_clap).long(#field_names_clap).help(#docs).takes_value(!#fields_is_boolean).global(true)
+           ::twelf::reexports::clap::Arg::new(#field_names_clap).long(#field_names_clap).help(#docs)
+            .action(if (#fields_is_boolean) {
+                ::twelf::reexports::clap::ArgAction::SetTrue
+            } else {
+                ::twelf::reexports::clap::ArgAction::Set
+            })
         ),*]
     }};
     (clap_branch, clap_method)

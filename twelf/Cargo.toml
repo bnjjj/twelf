@@ -12,7 +12,7 @@
     version     = "0.7.0"
 
 [dependencies]
-    clap_rs       = { version = "3.0", package = "clap", optional = true, features = ["derive"] }
+    clap_rs       = { version = "4", package = "clap", optional = true, features = ["derive"] }
     config-derive = { path = "../config-derive", version = "0.7" }
     envy          = { version = "0.4.1", git = "https://github.com/bnjjj/envy", branch = "master", optional = true }
     log           = "0.4.14"
