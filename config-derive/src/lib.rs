@@ -155,7 +155,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                         .as_object()
                         .ok_or_else(|| ::twelf::Error::InvalidFormat)?
                         .to_owned()
-                        .into_iter().filter(|(k, v)| ((defaulted.contains_key(k) && !defaulted[k]) || !res.contains_key(k)) && !v.is_null())
+                        .into_iter().filter(|(k, v)| (!defaulted.contains_key(k) || !defaulted[k] || !res.contains_key(k)) && !v.is_null())
                         .collect(); // must collect, as filter uses res
 
                     res.extend(extension);
