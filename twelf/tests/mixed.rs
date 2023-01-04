@@ -5,6 +5,9 @@ use std::collections::HashMap;
 use config_derive::config;
 use twelf::Layer;
 
+use clap::{CommandFactory, Parser};
+use clap_rs as clap;
+
 fn default_array() -> Vec<String> {
     vec!["first".to_owned(), "second".to_owned()]
 }
@@ -214,4 +217,37 @@ fn mixed_with_array_and_hashmap_with_default() {
     assert_eq!(config.elements_def, map);
     let array = vec![String::from("first"), String::from("second")];
     assert_eq!(config.array_def, array);
+}
+
+#[test]
+fn mixed_clap_defaults() {
+    #[config]
+    #[derive(Parser,Debug)]
+    #[clap(author, version, about, long_about = None)]
+    struct Conf {
+        #[clap(long, default_value_t = 55)]
+        some_num: usize,
+
+        #[clap(long, default_value = "some_val")]
+        string_def: String,
+
+        #[clap(long, default_value = "some,values,and,more")]
+        array_def: Vec<String>,
+    }
+
+    let matches = Conf::command().get_matches_from(&["test", "--array-def=asdf,qwer"]);
+
+    std::env::set_var("STRING_DEF", "coucou toi");
+
+    let prio = vec![
+        Layer::Env(None),
+        Layer::Clap(matches),
+    ];
+    let config = Conf::with_layers(&prio).unwrap();
+
+    let vec = vec!["asdf", "qwer"];
+
+    assert_eq!(config.string_def, "coucou toi"); // Env Layer
+    assert_eq!(config.some_num, 55);             // Clap default
+    assert_eq!(config.array_def, vec);           // Clap CLI
 }
