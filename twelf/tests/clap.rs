@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use clap_rs as clap;
+use clap::{CommandFactory, Parser};
 use config_derive::config;
 use twelf::Layer;
 
@@ -44,4 +45,32 @@ fn clap_with_array_and_hashmap() {
     assert_eq!(config.elements_snake, map);
     let array = vec![String::from("first"), String::from("second")];
     assert_eq!(config.arrays, array);
+}
+
+#[test]
+fn clap_derive_array() {
+    #[config]
+    #[derive(Parser,Debug)]
+    #[clap(author, version, about, long_about = None)]
+    struct Conf {
+        #[clap(long, default_value_t = 55)]
+        some_val: u32,
+
+        #[clap(long)]
+        arrays: Vec<String>,
+    }
+
+    let matches = Conf::command().get_matches_from(&[
+        "test",
+        "--arrays=asdf",
+        "--some-val=14",
+        "--arrays=qwer,zxc"
+    ]);
+
+    let prio = vec![
+        Layer::Clap(matches),
+    ];
+    let config = Conf::with_layers(&prio).unwrap();
+
+    assert_eq!(config.arrays, vec!["asdf","qwer","zxc"]);
 }
