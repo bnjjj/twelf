@@ -118,6 +118,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let toml_branch = build_toml_branch();
     let yaml_branch = build_yaml_branch();
     let dhall_branch = build_dhall_branch();
+    let default_trait_branch = build_default_trait_branch();
 
     #[cfg(not(feature = "ini"))]
     let ini_branch = quote! {};
@@ -140,7 +141,13 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
         docs,
     );
 
+    #[cfg(not(feature = "default_trait"))]
+    let derive_serialize = quote! {};
+    #[cfg(feature = "default_trait")]
+    let derive_serialize = quote! { #[derive(::twelf::reexports::serde::Serialize)] };
+
     let code = quote! {
+        #derive_serialize
         #[derive(::twelf::reexports::serde::Deserialize)]
         #[serde(crate = "::twelf::reexports::serde")]
         #strukt
@@ -184,6 +191,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                     #dhall_branch
                     #ini_branch
                     #clap_branch
+                    #default_trait_branch
                     other => unimplemented!("{:?}", other)
                 };
 
@@ -310,4 +318,12 @@ fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macr
        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
        (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)
     }, }
+}
+
+fn build_default_trait_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "default_trait")]
+    let default_trait_branch = quote! { ::twelf::Layer::DefaultTrait => (::twelf::reexports::serde_json::to_value(<Self as std::default::Default>::default())?,None), };
+    #[cfg(not(feature = "default_trait"))]
+    let default_trait_branch = quote! {};
+    default_trait_branch
 }
