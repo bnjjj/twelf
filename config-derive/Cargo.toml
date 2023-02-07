@@ -33,3 +33,4 @@
     json  = []
     toml  = []
     yaml  = []
+    default_trait = []

@@ -13,7 +13,7 @@
 
 [dependencies]
     clap_rs       = { version = "4", package = "clap", optional = true, features = ["derive"] }
-    config-derive = { path = "../config-derive", version = "0.9" }
+    config-derive  = { path = "../config-derive", version = "0.9" }
     envy          = { version = "0.4.1", git = "https://github.com/bnjjj/envy", branch = "master", optional = true }
     log           = "0.4.14"
     serde         = { version = "1", features = ["derive"] }
@@ -33,3 +33,4 @@
     json    = ["config-derive/json"]
     toml    = ["toml_rs", "config-derive/toml"]
     yaml    = ["serde_yaml", "config-derive/yaml"]
+    default_trait = ["config-derive/default_trait"]

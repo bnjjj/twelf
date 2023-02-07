@@ -58,4 +58,7 @@ pub enum Layer {
     /// Clap layer taking arguments matches from a clap application
     #[cfg(feature = "clap")]
     Clap(clap_rs::ArgMatches),
+    /// Default layer, using std::default::Default trait
+    #[cfg(feature = "default_trait")]
+    DefaultTrait,
 }
