@@ -1,3 +1,4 @@
+#![cfg(features = "default_trait")]
 use config_derive::config;
 use twelf::Layer;
 
