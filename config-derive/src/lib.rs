@@ -229,7 +229,7 @@ fn build_clap_branch(
 
                 for val in vals.into_iter() {
                     // hacky way of formatting everything to a string:
-                    let s = format!("{:?}", val);
+                    let s = val.to_string_lossy().into_owned();
                     let s = s.strip_prefix("\"").unwrap_or(&s);
                     let s = s.strip_suffix("\"").unwrap_or(&s);
 
