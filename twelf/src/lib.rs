@@ -61,7 +61,7 @@ pub enum Layer {
     /// Default layer, using std::default::Default trait
     #[cfg(feature = "default_trait")]
     DefaultTrait,
-    /// Custom layer taking file path to the json file
+    /// Custom layer, takes any function or closure that outputs a [serde_json::Value].
     #[cfg(feature = "custom_fn")]
     CustomFn(custom_fn::CustomFn),
 }
@@ -72,15 +72,15 @@ pub mod custom_fn {
 
     pub struct CustomFn(pub Box<dyn CustomFnTrait>);
 
-    impl<T> From<T> for CustomFn where T: Fn() -> crate::reexports::serde_json::Value + Clone + 'static {
+    impl<T> From<T> for CustomFn where T: FnOnce() -> crate::reexports::serde_json::Value + Clone + 'static {
         fn from(func: T) -> Self {
             CustomFn(Box::new(func) as Box<dyn CustomFnTrait>)
         }
     }
 
-    pub trait CustomFnTrait: Fn() -> crate::reexports::serde_json::Value + DynClone {}
+    pub trait CustomFnTrait: FnOnce() -> crate::reexports::serde_json::Value + DynClone {}
 
-    impl<T> CustomFnTrait for T where T: Clone + Fn() -> crate::reexports::serde_json::Value {}
+    impl<T> CustomFnTrait for T where T: Clone + FnOnce() -> crate::reexports::serde_json::Value {}
 
     impl Clone for CustomFn {
         fn clone(&self) -> Self {

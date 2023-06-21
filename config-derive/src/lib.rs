@@ -332,7 +332,7 @@ fn build_default_trait_branch() -> proc_macro2::TokenStream {
 
 fn build_custom_fn_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "custom_fn")]
-    let custom_branch = quote! { ::twelf::Layer::CustomFn(custom_fn) => (custom_fn.0(),None), };
+    let custom_branch = quote! { ::twelf::Layer::CustomFn(custom_fn) => (custom_fn.clone().0(),None), };
     #[cfg(not(feature = "custom_fn"))]
     let custom_branch = quote! {};
     custom_branch
