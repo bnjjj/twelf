@@ -23,6 +23,7 @@
     serde_yaml    = { version = "0.8.23", optional = true }
     thiserror     = "1"
     toml_rs       = { version = "0.5.8", package = "toml", optional = true }
+    dyn-clone     = { version = "1.0.0", optional = true }
 
 [features]
     clap    = ["clap_rs", "config-derive/clap", "envy"]
@@ -34,3 +35,4 @@
     toml    = ["toml_rs", "config-derive/toml"]
     yaml    = ["serde_yaml", "config-derive/yaml"]
     default_trait = ["config-derive/default_trait"]
+    custom_fn = ["dyn-clone", "config-derive/custom_fn"]
