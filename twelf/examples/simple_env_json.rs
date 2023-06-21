@@ -3,7 +3,7 @@
 use twelf::{config, Layer};
 
 #[config]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Config {
     db_host: String,
     threads: usize,

@@ -6,7 +6,7 @@ use twelf::reexports::serde::{Deserialize, Serialize};
 use twelf::{config, Layer};
 
 #[config]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Config {
     list: Vec<String>,
     labels: HashMap<String, String>,
@@ -14,7 +14,7 @@ struct Config {
     nested: Nested,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Default, Deserialize, Serialize)]
 struct Nested {
     inner: String,
 }

@@ -12,7 +12,7 @@ const INI_TEST_FILE: &str = "./tests/fixtures/test.ini";
 #[test]
 fn ini_simple_types() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct TestCfg {
         test: String,
         another: usize,
@@ -32,7 +32,7 @@ fn ini_simple_types() {
 #[test]
 fn ini_simple_with_prefix() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         /// Coucou
         elements_def: HashMap<String, String>,
@@ -58,7 +58,7 @@ fn ini_simple_with_prefix() {
 #[test]
 fn ini_simple_with_option() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements_def: Option<HashMap<String, String>>,
         array_def: Option<Vec<String>>,
@@ -81,7 +81,7 @@ fn ini_simple_with_option() {
 #[test]
 fn ini_with_array_and_hashmap_string() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements: HashMap<String, String>,
         #[serde(default = "default_array")]
@@ -114,7 +114,7 @@ fn ini_with_array_and_hashmap_string() {
 #[test]
 fn ini_with_array_and_hashmap_with_default() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements_def: HashMap<String, String>,
         #[serde(default = "default_array")]

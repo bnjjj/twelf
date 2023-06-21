@@ -23,6 +23,7 @@ For now it supports :
 use twelf::{config, Layer};
 
 #[config]
+#[derive(Default)]
 struct Conf {
     test: String,
     another: usize,

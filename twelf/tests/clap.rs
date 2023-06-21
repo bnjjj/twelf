@@ -10,7 +10,7 @@ const JSON_TEST_FILE: &str = "./tests/fixtures/test.json";
 #[test]
 fn clap_with_array_and_hashmap() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         /// My custom documentation on elements-snake in clap
         elements_snake: HashMap<String, String>,
@@ -50,7 +50,7 @@ fn clap_with_array_and_hashmap() {
 #[test]
 fn clap_derive_array() {
     #[config]
-    #[derive(Parser,Debug)]
+    #[derive(Parser,Debug, Default)]
     #[clap(author, version, about, long_about = None)]
     struct Conf {
         #[clap(long, default_value_t = 55)]

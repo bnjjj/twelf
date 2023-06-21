@@ -5,7 +5,7 @@ use clap_rs as clap;
 use twelf::{config, Layer};
 
 #[config]
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Default)]
 #[clap(author, version, about, long_about = None)]
 struct Config {
     #[clap(long, help = "Documentation inside clap, to specifiy db_host")]

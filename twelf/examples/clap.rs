@@ -4,7 +4,7 @@ use clap_rs as clap;
 use twelf::{config, Layer};
 
 #[config]
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct Config {
     /// Documentation inside clap, to specifiy db_host
     db_host: String,
