@@ -1,3 +1,5 @@
+#![cfg(feature = "clap")]
+
 use std::collections::HashMap;
 
 use clap_rs as clap;

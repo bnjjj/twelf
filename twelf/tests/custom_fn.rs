@@ -1,3 +1,4 @@
+#![cfg(feature = "custom_fn")]
 
 use config_derive::config;
 use twelf::Layer;

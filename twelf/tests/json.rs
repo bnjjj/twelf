@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+#![cfg(feature = "json")]
 
+use std::collections::HashMap;
 use config_derive::config;
 use twelf::Layer;
 

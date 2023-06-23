@@ -1,3 +1,5 @@
+#![cfg(feature = "ini")]
+
 use std::collections::HashMap;
 
 use config_derive::config;

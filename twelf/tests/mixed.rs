@@ -1,3 +1,5 @@
+#![cfg(all(feature = "toml", feature = "json"))]
+
 #![allow(dead_code)]
 
 use std::collections::HashMap;

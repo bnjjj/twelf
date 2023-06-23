@@ -1,3 +1,5 @@
+#![cfg(feature = "dhall")]
+
 use std::collections::HashMap;
 
 use config_derive::config;

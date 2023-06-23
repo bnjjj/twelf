@@ -1,3 +1,5 @@
+#![cfg(feature = "toml")]
+
 use std::collections::HashMap;
 
 use config_derive::config;
