@@ -11,9 +11,10 @@ For now it supports :
 
 - Default settings (inside your codebase with `#[serde(default = ...)]` coming from [serde](https://serde.rs))
 - Reading from `TOML`, `YAML`, `JSON`, `DHALL`, `INI` files
+- Executing a custom function or closure to supply values via a [serde_json::Value]
 - Reading from environment variables: it supports `HashMap` structure with `MY_VARIABLE="mykey=myvalue,mykey2=myvalue2"` and also array like `MY_VARIABLE=first,second` thanks to [envy](https://github.com/softprops/envy).
 - All [serde](https://serde.rs) attributes can be used in your struct to customize your configuration as you wish
-- Reading your configuration from your command line built with [clap](https://github.com/clap-rs/clap) (ATTENTION: if you're using version < v3 use the `twelf@1.8` version)
+- Reading your configuration from your command line built with [clap](https://github.com/clap-rs/clap) (ATTENTION: if you're using version < v3 use the `twelf@0.8` version)
 
 # Usage
 
@@ -23,6 +24,7 @@ For now it supports :
 use twelf::{config, Layer};
 
 #[config]
+#[derive(Default)]
 struct Conf {
     test: String,
     another: usize,
@@ -67,8 +69,12 @@ Check [here](./twelf/examples) for more examples.
 Twelf supports crate features, if you only want support for `json`, `env` and `toml` then you just have to add this to your `Cargo.toml`
 
 ```toml
-twelf = { version = "0.3", default-features = false, features = ["json", "toml", "env"] }
+twelf = { version = "0.11", default-features = false, features = ["json", "toml", "env"] }
 ```
+
+`default_trait` enables code for a layer that integrate fields derived with the [std::default::Default] trait.
+
+`custom_fn` enables code for a layer that allows a custom closure to be executed.
 
 Default features are `["env", "clap"]`
 
