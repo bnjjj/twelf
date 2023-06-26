@@ -1,3 +1,5 @@
+#![cfg(feature = "dhall")]
+
 use std::collections::HashMap;
 
 use config_derive::config;
@@ -12,7 +14,7 @@ const DHALL_TEST_FILE: &str = "./tests/fixtures/test.dhall";
 #[test]
 fn dhall_simple_types() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct TestCfg {
         test: String,
         another: usize,
@@ -32,7 +34,7 @@ fn dhall_simple_types() {
 #[test]
 fn dhall_simple_with_prefix() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements_def: HashMap<String, String>,
         #[serde(default = "default_array")]
@@ -57,7 +59,7 @@ fn dhall_simple_with_prefix() {
 #[test]
 fn dhall_simple_with_option() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements_def: Option<HashMap<String, String>>,
         array_def: Option<Vec<String>>,
@@ -80,7 +82,7 @@ fn dhall_simple_with_option() {
 #[test]
 fn dhall_with_array_and_hashmap_string() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements: HashMap<String, String>,
         #[serde(default = "default_array")]
@@ -113,7 +115,7 @@ fn dhall_with_array_and_hashmap_string() {
 #[test]
 fn dhall_with_array_and_hashmap_with_default() {
     #[config]
-    #[derive(Debug)]
+    #[derive(Debug, Default)]
     struct Conf {
         elements_def: HashMap<String, String>,
         #[serde(default = "default_array")]

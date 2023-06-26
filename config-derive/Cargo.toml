@@ -34,3 +34,4 @@
     toml  = []
     yaml  = []
     default_trait = []
+    custom_fn = []

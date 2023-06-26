@@ -119,6 +119,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
     let yaml_branch = build_yaml_branch();
     let dhall_branch = build_dhall_branch();
     let default_trait_branch = build_default_trait_branch();
+    let custom_fn_branch = build_custom_fn_branch();
 
     #[cfg(not(feature = "ini"))]
     let ini_branch = quote! {};
@@ -141,9 +142,9 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
         docs,
     );
 
-    #[cfg(not(feature = "default_trait"))]
+    #[cfg(all(not(feature = "default_trait"), not(feature = "custom_fn")))]
     let derive_serialize = quote! {};
-    #[cfg(feature = "default_trait")]
+    #[cfg(any(feature = "default_trait", feature = "custom_fn"))]
     let derive_serialize = quote! { #[derive(::twelf::reexports::serde::Serialize)] };
 
     let code = quote! {
@@ -192,6 +193,7 @@ pub fn config(_attrs: TokenStream, item: TokenStream) -> TokenStream {
                     #ini_branch
                     #clap_branch
                     #default_trait_branch
+                    #custom_fn_branch
                     other => unimplemented!("{:?}", other)
                 };
 
@@ -326,4 +328,12 @@ fn build_default_trait_branch() -> proc_macro2::TokenStream {
     #[cfg(not(feature = "default_trait"))]
     let default_trait_branch = quote! {};
     default_trait_branch
+}
+
+fn build_custom_fn_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "custom_fn")]
+    let custom_branch = quote! { ::twelf::Layer::CustomFn(custom_fn) => (custom_fn.clone().0(),None), };
+    #[cfg(not(feature = "custom_fn"))]
+    let custom_branch = quote! {};
+    custom_branch
 }
