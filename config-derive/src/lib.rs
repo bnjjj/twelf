@@ -284,7 +284,11 @@ fn build_env_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macr
 
 fn build_json_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "json")]
-    let json_branch = quote! { ::twelf::Layer::Json(filepath) => (::twelf::reexports::serde_json::from_reader(std::fs::File::open(filepath)?)?,None), };
+    let json_branch = quote! { ::twelf::Layer::Json(filepath) => {
+        let file_content = std::fs::read_to_string(filepath)?;
+        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        (::twelf::reexports::serde_json::from_str(&content)?,None)
+    }, };
     #[cfg(not(feature = "json"))]
     let json_branch = quote! {};
     json_branch
@@ -292,7 +296,11 @@ fn build_json_branch() -> proc_macro2::TokenStream {
 
 fn build_toml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "toml")]
-    let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => (::twelf::reexports::toml::from_str(&std::fs::read_to_string(filepath)?)?,None), };
+    let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => {
+        let file_content = std::fs::read_to_string(filepath)?;
+        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        (::twelf::reexports::toml::from_str(&content)?,None)
+    }, };
     #[cfg(not(feature = "toml"))]
     let toml_branch = quote! {};
     toml_branch
@@ -300,7 +308,11 @@ fn build_toml_branch() -> proc_macro2::TokenStream {
 
 fn build_yaml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "yaml")]
-    let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => (::twelf::reexports::serde_yaml::from_str(&std::fs::read_to_string(filepath)?)?,None), };
+    let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => {
+        let file_content = std::fs::read_to_string(filepath)?;
+        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        (::twelf::reexports::serde_yaml::from_str(&content)?,None)
+    }, };
     #[cfg(not(feature = "yaml"))]
     let yaml_branch = quote! {};
     yaml_branch
@@ -308,7 +320,11 @@ fn build_yaml_branch() -> proc_macro2::TokenStream {
 
 fn build_dhall_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "dhall")]
-    let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => (::twelf::reexports::serde_dhall::from_str(&std::fs::read_to_string(filepath)?).parse()?,None), };
+    let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => {
+        let file_content = std::fs::read_to_string(filepath)?;
+        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        (::twelf::reexports::serde_dhall::from_str(&content).parse()?,None)
+    }, };
     #[cfg(not(feature = "dhall"))]
     let dhall_branch = quote! {};
     dhall_branch
@@ -317,7 +333,9 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
 #[cfg(feature = "ini")]
 fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
     quote! { ::twelf::Layer::Ini(filepath) => {
-       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&std::fs::read_to_string(filepath)?)?;
+        let file_content = std::fs::read_to_string(filepath)?;
+        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+       let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&content)?;
        (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)
     }, }
 }
@@ -332,7 +350,8 @@ fn build_default_trait_branch() -> proc_macro2::TokenStream {
 
 fn build_custom_fn_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "custom_fn")]
-    let custom_branch = quote! { ::twelf::Layer::CustomFn(custom_fn) => (custom_fn.clone().0(),None), };
+    let custom_branch =
+        quote! { ::twelf::Layer::CustomFn(custom_fn) => (custom_fn.clone().0(),None), };
     #[cfg(not(feature = "custom_fn"))]
     let custom_branch = quote! {};
     custom_branch

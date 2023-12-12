@@ -16,6 +16,14 @@ pub mod reexports {
     pub use log;
     pub use serde;
     pub use serde_json;
+    #[cfg(any(
+        feature = "json",
+        feature = "yaml",
+        feature = "toml",
+        feature = "ini",
+        feature = "dhall"
+    ))]
+    pub use shellexpand;
 
     #[cfg(feature = "clap")]
     pub use clap_rs as clap;
@@ -68,11 +76,14 @@ pub enum Layer {
 
 #[cfg(feature = "custom_fn")]
 pub mod custom_fn {
-    use dyn_clone::{DynClone, clone_box};
+    use dyn_clone::{clone_box, DynClone};
 
     pub struct CustomFn(pub Box<dyn CustomFnTrait>);
 
-    impl<T> From<T> for CustomFn where T: FnOnce() -> crate::reexports::serde_json::Value + Clone + 'static {
+    impl<T> From<T> for CustomFn
+    where
+        T: FnOnce() -> crate::reexports::serde_json::Value + Clone + 'static,
+    {
         fn from(func: T) -> Self {
             CustomFn(Box::new(func) as Box<dyn CustomFnTrait>)
         }
@@ -91,6 +102,6 @@ pub mod custom_fn {
     impl core::fmt::Debug for CustomFn {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             write!(f, "CustomFn")
-        } 
+        }
     }
 }

@@ -1,0 +1,23 @@
+server_url = "127.0.0.1:3000"
+api_endpoint="http://localhost:3000/api"
+
+[profiles.s3]
+type = "s3"
+bucket = "test"
+region = "${TERRAPHIM_PROFILE_S3_REGION:-us-east-1}"
+endpoint = "http://test:8333/"
+access_key_id = ""
+secret_access_key = ""
+
+[profiles.sled]
+type = "sled"
+datadir= "/tmp/opendal/sled"
+foo = "${TERRAPHIM_FOO:-bar-3}"
+
+[profiles.dash]
+type = "dashmap"
+root = "/tmp/dashmaptest"
+
+[profiles.rock]
+type = "rocksdb"
+datadir = "/tmp/opendal/rocksdb"

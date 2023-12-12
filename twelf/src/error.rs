@@ -1,8 +1,12 @@
+use std::env::VarError;
+
 use thiserror::Error as ErrorTrait;
 
 /// Error generated when instantiate configuration
 #[derive(Debug, ErrorTrait)]
 pub enum Error {
+    #[error("env lookup error")]
+    ShellExpand(#[from] shellexpand::LookupError<VarError>),
     #[error("io error")]
     Io(#[from] std::io::Error),
     #[cfg(any(feature = "env", feature = "clap"))]
