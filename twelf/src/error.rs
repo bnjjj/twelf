@@ -5,6 +5,13 @@ use thiserror::Error as ErrorTrait;
 /// Error generated when instantiate configuration
 #[derive(Debug, ErrorTrait)]
 pub enum Error {
+    #[cfg(any(
+        feature = "json",
+        feature = "yaml",
+        feature = "toml",
+        feature = "ini",
+        feature = "dhall"
+    ))]
     #[error("env lookup error")]
     ShellExpand(#[from] shellexpand::LookupError<VarError>),
     #[error("io error")]
