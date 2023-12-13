@@ -11,6 +11,7 @@ For now it supports :
 
 - Default settings (inside your codebase with `#[serde(default = ...)]` coming from [serde](https://serde.rs))
 - Reading from `TOML`, `YAML`, `JSON`, `DHALL`, `INI` files
+- Expanding environment variables in your configuration files, for example with a JSON file `{"data": ${MY_ENV_VAR:-the_default_value}}` [example](https://github.com/bnjjj/twelf/blob/master/twelf/examples/config.toml#L7)
 - Executing a custom function or closure to supply values via a [serde_json::Value]
 - Reading from environment variables: it supports `HashMap` structure with `MY_VARIABLE="mykey=myvalue,mykey2=myvalue2"` and also array like `MY_VARIABLE=first,second` thanks to [envy](https://github.com/softprops/envy).
 - All [serde](https://serde.rs) attributes can be used in your struct to customize your configuration as you wish
