@@ -28,7 +28,7 @@
 
 [features]
     clap    = ["clap_rs", "config-derive/clap", "envy"]
-    default = ["env", "clap"]
+    default = ["env", "clap","shellexpand"]
     dhall   = ["serde_dhall", "config-derive/dhall", "shellexpand"]
     env     = ["envy", "config-derive/env"]
     ini     = ["serde_ini", "config-derive/ini", "shellexpand"]

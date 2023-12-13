@@ -3,22 +3,21 @@ use std::collections::HashMap;
 use twelf::reexports::serde::{Deserialize, Serialize};
 use twelf::{config, Layer};
 
+
 #[config]
 #[derive(Debug, Default)]
 pub struct Settings {
     /// The address to listen on
+    
     pub server_url: Option<String>,
     // pub config_file: String,
     pub api_endpoint: Option<String>,
+    
     pub profiles: HashMap<String, HashMap<String, String>>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
+fn main() {
+        
         std::env::set_var("APP_INNER", "inner value");
         std::env::set_var("APP_LIST", "value1,value2");
         std::env::set_var(
@@ -26,7 +25,7 @@ mod tests {
             "REGION=us-west-2, ENABLE_VIRTUAL_HOST_STYLE=OFF",
         );
         let env_vars = vec![
-            ("TERRAPHIM_PROFILE_S3_REGION", "us-west-1"),
+            // ("TERRAPHIM_PROFILE_S3_REGION", "us-west-1"),
             ("TERRAPHIM_PROFILE_S3_ENABLE_VIRTUAL_HOST_STYLE", "on"),
         ];
         for (k, v) in &env_vars {
@@ -35,6 +34,7 @@ mod tests {
         let config = Settings::with_layers(&[
             Layer::Toml("./examples/config.toml".into()),
             Layer::Env(Some(String::from("TERRAPHIM_"))),
+
         ])
         .unwrap();
 
@@ -48,4 +48,3 @@ mod tests {
         );
         println!("config - {:?}", config);
     }
-}
