@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use twelf::reexports::serde::{Deserialize, Serialize};
 use twelf::{config, Layer};
 
 #[config]
@@ -11,6 +10,16 @@ pub struct Settings {
     // pub config_file: String,
     pub api_endpoint: Option<String>,
     pub profiles: HashMap<String, HashMap<String, String>>,
+}
+
+fn main() {
+    let config = Settings::with_layers(&[
+        Layer::Toml("./examples/config.toml".into()),
+        Layer::Env(Some(String::from("TERRAPHIM_"))),
+    ])
+    .unwrap();
+
+    println!("config - {:?}", config);
 }
 
 #[cfg(test)]

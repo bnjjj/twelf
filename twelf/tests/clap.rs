@@ -2,8 +2,8 @@
 
 use std::collections::HashMap;
 
-use clap_rs as clap;
 use clap::{CommandFactory, Parser};
+use clap_rs as clap;
 use config_derive::config;
 use twelf::Layer;
 
@@ -28,7 +28,7 @@ fn clap_with_array_and_hashmap() {
         .unwrap()
         .contains("My custom documentation on elements-snake in clap"));
 
-    let matches = app.get_matches_from(&[
+    let matches = app.get_matches_from([
         "test",
         "--arrays=first,second",
         "--elements-snake=coucou=toi,hello=you",
@@ -52,7 +52,7 @@ fn clap_with_array_and_hashmap() {
 #[test]
 fn clap_derive_array() {
     #[config]
-    #[derive(Parser,Debug, Default)]
+    #[derive(Parser, Debug, Default)]
     #[clap(author, version, about, long_about = None)]
     struct Conf {
         #[clap(long, default_value_t = 55)]
@@ -62,17 +62,15 @@ fn clap_derive_array() {
         arrays: Vec<String>,
     }
 
-    let matches = Conf::command().get_matches_from(&[
+    let matches = Conf::command().get_matches_from([
         "test",
         "--arrays=asdf",
         "--some-val=14",
-        "--arrays=qwer,zxc"
+        "--arrays=qwer,zxc",
     ]);
 
-    let prio = vec![
-        Layer::Clap(matches),
-    ];
+    let prio = vec![Layer::Clap(matches)];
     let config = Conf::with_layers(&prio).unwrap();
 
-    assert_eq!(config.arrays, vec!["asdf","qwer","zxc"]);
+    assert_eq!(config.arrays, vec!["asdf", "qwer", "zxc"]);
 }

@@ -1,5 +1,4 @@
 #![cfg(all(feature = "toml", feature = "json"))]
-
 #![allow(dead_code)]
 
 use std::collections::HashMap;
@@ -237,19 +236,16 @@ fn mixed_clap_defaults() {
         array_def: Vec<String>,
     }
 
-    let matches = Conf::command().get_matches_from(&["test", "--array-def=asdf,qwer"]);
+    let matches = Conf::command().get_matches_from(["test", "--array-def=asdf,qwer"]);
 
     std::env::set_var("STRING_DEF", "coucou toi");
 
-    let prio = vec![
-        Layer::Env(None),
-        Layer::Clap(matches),
-    ];
+    let prio = vec![Layer::Env(None), Layer::Clap(matches)];
     let config = Conf::with_layers(&prio).unwrap();
 
     let vec = vec!["asdf", "qwer"];
 
     assert_eq!(config.string_def, "coucou toi"); // Env Layer
-    assert_eq!(config.some_num, 55);             // Clap default
-    assert_eq!(config.array_def, vec);           // Clap CLI
+    assert_eq!(config.some_num, 55); // Clap default
+    assert_eq!(config.array_def, vec); // Clap CLI
 }
