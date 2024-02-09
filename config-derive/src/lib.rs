@@ -298,6 +298,9 @@ fn build_toml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "toml")]
     let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
+        // Strip out comments (lines starting with #)
+        let file_content = file_content.lines().filter(|line| !line.trim().starts_with("#")).collect::<Vec<_>>().join("\n");
+
         let content = ::twelf::reexports::shellexpand::env(&file_content)?;
         (::twelf::reexports::toml::from_str(&content)?,None)
     }, };
@@ -310,6 +313,8 @@ fn build_yaml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "yaml")]
     let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
+        // Strip out comments (lines starting with #)
+        let file_content = file_content.lines().filter(|line| !line.trim().starts_with("#")).collect::<Vec<_>>().join("\n");
         let content = ::twelf::reexports::shellexpand::env(&file_content)?;
         (::twelf::reexports::serde_yaml::from_str(&content)?,None)
     }, };
@@ -322,6 +327,9 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "dhall")]
     let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
+        // Strip out comments (lines starting with --)
+        let file_content = file_content.lines().filter(|line| !line.trim().starts_with("--")).collect::<Vec<_>>().join("\n");
+
         let content = ::twelf::reexports::shellexpand::env(&file_content)?;
         (::twelf::reexports::serde_dhall::from_str(&content).parse()?,None)
     }, };
@@ -334,6 +342,8 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
 fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
     quote! { ::twelf::Layer::Ini(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
+        // Strip out comments (lines starting with ;)
+        let file_content = file_content.lines().filter(|line| !line.trim().starts_with(";")).collect::<Vec<_>>().join("\n");
         let content = ::twelf::reexports::shellexpand::env(&file_content)?;
        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&content)?;
        (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)

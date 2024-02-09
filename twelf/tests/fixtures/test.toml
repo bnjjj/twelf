@@ -1,3 +1,4 @@
+# private_key = "${FOO}"
 test = 'from file'
 another = 25
 
