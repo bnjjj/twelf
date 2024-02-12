@@ -1,6 +1,7 @@
 ---
 test: from file
 another: 25
+# This is a comment ${FOO}
 elements:
   key: value
   key2: value2
