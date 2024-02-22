@@ -282,11 +282,28 @@ fn build_env_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macr
     },}
 }
 
+#[cfg(any(
+    feature = "json",
+    feature = "yaml",
+    feature = "toml",
+    feature = "ini",
+    feature = "dhall"
+))]
+fn build_shellexpand() -> proc_macro2::TokenStream {
+    #[cfg(feature = "shellexpand")]
+    quote! { let content = ::twelf::reexports::shellexpand::env(&file_content)? }
+
+    #[cfg(not(feature = "shellexpand"))]
+    quote! { let content = file_content }
+}
+
 fn build_json_branch() -> proc_macro2::TokenStream {
+    #[cfg(feature = "json")]
+    let shellexpand = build_shellexpand();
     #[cfg(feature = "json")]
     let json_branch = quote! { ::twelf::Layer::Json(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
-        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        #shellexpand;
         (::twelf::reexports::serde_json::from_str(&content)?,None)
     }, };
     #[cfg(not(feature = "json"))]
@@ -296,12 +313,14 @@ fn build_json_branch() -> proc_macro2::TokenStream {
 
 fn build_toml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "toml")]
+    let shellexpand = build_shellexpand();
+    #[cfg(feature = "toml")]
     let toml_branch = quote! { ::twelf::Layer::Toml(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
         // Strip out comments (lines starting with #)
         let file_content = file_content.lines().filter(|line| !line.trim().starts_with("#")).collect::<Vec<_>>().join("\n");
 
-        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        #shellexpand;
         (::twelf::reexports::toml::from_str(&content)?,None)
     }, };
     #[cfg(not(feature = "toml"))]
@@ -311,11 +330,13 @@ fn build_toml_branch() -> proc_macro2::TokenStream {
 
 fn build_yaml_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "yaml")]
+    let shellexpand = build_shellexpand();
+    #[cfg(feature = "yaml")]
     let yaml_branch = quote! { ::twelf::Layer::Yaml(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
         // Strip out comments (lines starting with #)
         let file_content = file_content.lines().filter(|line| !line.trim().starts_with("#")).collect::<Vec<_>>().join("\n");
-        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        #shellexpand;
         (::twelf::reexports::serde_yaml::from_str(&content)?,None)
     }, };
     #[cfg(not(feature = "yaml"))]
@@ -325,12 +346,14 @@ fn build_yaml_branch() -> proc_macro2::TokenStream {
 
 fn build_dhall_branch() -> proc_macro2::TokenStream {
     #[cfg(feature = "dhall")]
+    let shellexpand = build_shellexpand();
+    #[cfg(feature = "dhall")]
     let dhall_branch = quote! { ::twelf::Layer::Dhall(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
         // Strip out comments (lines starting with --)
         let file_content = file_content.lines().filter(|line| !line.trim().starts_with("--")).collect::<Vec<_>>().join("\n");
 
-        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        #shellexpand;
         (::twelf::reexports::serde_dhall::from_str(&content).parse()?,None)
     }, };
     #[cfg(not(feature = "dhall"))]
@@ -340,11 +363,12 @@ fn build_dhall_branch() -> proc_macro2::TokenStream {
 
 #[cfg(feature = "ini")]
 fn build_ini_branch(opt_struct_name: &Ident, struct_gen: &Generics) -> proc_macro2::TokenStream {
+    let shellexpand = build_shellexpand();
     quote! { ::twelf::Layer::Ini(filepath) => {
         let file_content = std::fs::read_to_string(filepath)?;
         // Strip out comments (lines starting with ;)
         let file_content = file_content.lines().filter(|line| !line.trim().starts_with(";")).collect::<Vec<_>>().join("\n");
-        let content = ::twelf::reexports::shellexpand::env(&file_content)?;
+        #shellexpand;
        let tmp_cfg: #opt_struct_name #struct_gen = ::twelf::reexports::serde_ini::from_str(&content)?;
        (::twelf::reexports::serde_json::to_value(tmp_cfg)?,None)
     }, }
