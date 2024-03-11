@@ -77,7 +77,7 @@ twelf = { version = "0.11", default-features = false, features = ["json", "toml"
 
 `custom_fn` enables code for a layer that allows a custom closure to be executed.
 
-Default features are `["env", "clap"]`
+Default features are `["env", "clap", "shellexpand"]`
 
 # Contributing
 
