@@ -16,12 +16,15 @@ pub mod reexports {
     pub use log;
     pub use serde;
     pub use serde_json;
-    #[cfg(any(
-        feature = "json",
-        feature = "yaml",
-        feature = "toml",
-        feature = "ini",
-        feature = "dhall"
+    #[cfg(all(
+        any(
+            feature = "json",
+            feature = "yaml",
+            feature = "toml",
+            feature = "ini",
+            feature = "dhall"
+        ),
+        feature = "shellexpand"
     ))]
     pub use shellexpand;
 

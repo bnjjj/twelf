@@ -35,3 +35,4 @@
     yaml  = []
     default_trait = []
     custom_fn = []
+    shellexpand = []
